@@ -23,6 +23,19 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    // Spring Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    testImplementation 'org.springframework.security:spring-security-test'
+    // jwt
+    implementation 'io.jsonwebtoken:jjwt:0.11.5'
+    // JPA
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    // MySql
+    runtimeOnly 'com.mysql:mysql-connector-j'
 }
 
 tasks.named('test') {
