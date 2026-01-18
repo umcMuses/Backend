@@ -47,6 +47,9 @@ public class OrderENT {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "customer_key", nullable = false, unique = true, length = 100)
+    private String customerKey;
+
     //강결합, 주문 생성시 같이 생성
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

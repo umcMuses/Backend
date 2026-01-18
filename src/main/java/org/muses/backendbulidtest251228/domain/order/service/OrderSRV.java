@@ -56,6 +56,7 @@ public class OrderSRV {
         OrderENT order = OrderENT.builder()
                 .member(member)
                 .project(project)
+                .customerKey(customerKey)
                 .status(OrderStatus.RESERVED)
                 .totalAmount(totalAmount)
                 .createdAt(LocalDateTime.now())
