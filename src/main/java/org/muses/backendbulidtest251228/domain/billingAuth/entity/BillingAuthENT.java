@@ -72,5 +72,11 @@ public class BillingAuthENT {
                 .createdAt(LocalDateTime.now())
                 .build();
     }
+
+    public void revoke() {
+        this.status = BillingAuthStatus.REVOKED;
+        this.revokedAt = LocalDateTime.now();
+    }
+
 }
 

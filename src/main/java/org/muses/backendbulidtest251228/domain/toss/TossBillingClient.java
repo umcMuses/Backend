@@ -40,4 +40,14 @@ public class TossBillingClient {
                 .bodyToMono(BillingIssueResDTO.class)
                 .block();
     }
+
+    public void deleteBillingKey(String billingKey) {
+        webClient.delete()
+                .uri("/v1/billing/{billingKey}", billingKey)
+                .retrieve()
+                .toBodilessEntity()
+                .block();
+
+        log.info("[TOSS] BillingKey revoked. billingKey={}", billingKey);
+    }
 }

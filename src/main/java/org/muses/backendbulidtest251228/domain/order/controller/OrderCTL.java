@@ -8,10 +8,7 @@ import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateResDTO;
 import org.muses.backendbulidtest251228.domain.order.service.OrderSRV;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,4 +38,14 @@ public class OrderCTL {
         return ResponseEntity.ok(ApiResponse.success(resDTO));
 
     }
+
+    @DeleteMapping("/cancel")
+    public ResponseEntity<ApiResponse<?>> cancelOrder(@RequestParam("orderId") Long orderId){
+
+        orderSRV.cancel(orderId);
+
+
+        return ResponseEntity.ok(ApiResponse.success("OK"));
+    }
+
 }

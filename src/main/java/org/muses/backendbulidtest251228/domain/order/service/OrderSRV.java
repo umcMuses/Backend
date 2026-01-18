@@ -2,6 +2,8 @@ package org.muses.backendbulidtest251228.domain.order.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.muses.backendbulidtest251228.domain.billingAuth.entity.BillingAuthENT;
+import org.muses.backendbulidtest251228.domain.billingAuth.repository.BillingAuthREP;
 import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateReqDTO;
 import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateResDTO;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
@@ -12,6 +14,7 @@ import org.muses.backendbulidtest251228.domain.temp.Member;
 import org.muses.backendbulidtest251228.domain.temp.MemberREP;
 import org.muses.backendbulidtest251228.domain.temp.Project;
 import org.muses.backendbulidtest251228.domain.temp.ProjectREP;
+import org.muses.backendbulidtest251228.domain.toss.TossBillingClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +31,9 @@ public class OrderSRV {
     private final OrderREP orderREP;
     private final MemberREP memberREP;
     private final ProjectREP projectREP;
+    private final BillingAuthREP billingAuthREP;
+
+    private final TossBillingClient tossBillingClient;
 
 
     @Transactional
@@ -85,5 +91,29 @@ public class OrderSRV {
                 .successUrl(baseSuccessUrl)
                 .failUrl(baseFailUrl)
                 .build();
+    }
+
+    //해당 주문을 찾아서 일단 빌링키 삭제 해달라고 toss 에게 요청
+    // 이후 빌링키 와 order 상태 변경
+    @Transactional
+    public void cancel(Long orderId){
+
+
+
+        OrderENT order = orderREP.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("order not found. orderId=" + orderId));
+
+
+
+        BillingAuthENT billingAuth = billingAuthREP.findByOrder(order)
+                .orElseThrow(() -> new IllegalStateException("billing auth not found. orderId=" + orderId));
+
+        // Toss에 빌링키 삭제 요청
+        tossBillingClient.deleteBillingKey(billingAuth.getBillingKey());
+
+
+        billingAuth.revoke();
+
+        order.changeStatus(OrderStatus.CANCELED);
     }
 }
