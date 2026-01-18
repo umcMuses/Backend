@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/billing-auth")
+@RequestMapping("/api/order")
 public class OrderCTL {
 
     private final OrderSRV orderSRV;
