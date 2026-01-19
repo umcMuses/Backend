@@ -1,4 +1,8 @@
-package org.muses.backendbulidtest251228.mypage.repository;
+package org.muses.backendbulidtest251228.domain.mypage.repository;
 
-public class MyPageMemberRepository {
+import org.muses.backendbulidtest251228.domain.member.entity.Member;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface MyPageMemberRepository extends JpaRepository<Member, Long> {
+    boolean existsByNickName(String nickName);
 }
