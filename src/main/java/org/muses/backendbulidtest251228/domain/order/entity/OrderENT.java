@@ -50,6 +50,16 @@ public class OrderENT {
     @Column(name = "customer_key", nullable = false, unique = true, length = 100)
     private String customerKey;
 
+    @Setter
+    @Column(name = "payment_order_id", nullable = true)
+    private String paymentOrderId;
+
+    @Column(name = "retry_count", nullable = true)
+    private Integer retryCount;
+
+    @Column(name = "next_retry_at", nullable = true)
+    private LocalDateTime nextRetryAt;
+
     //강결합, 주문 생성시 같이 생성
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
