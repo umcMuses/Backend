@@ -24,9 +24,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		String token = resolveToken(request);
 
 		// token valid 하면 SecurityContext 에 저장
-		if (token != null && jwtTokenProvider.validateToken(token)) {
-			Authentication authentication = jwtTokenProvider.getAuthentication(token);
-			SecurityContextHolder.getContext().setAuthentication(authentication);
+		try {
+			if (token != null && jwtTokenProvider.validateToken(token)) {
+				Authentication authentication = jwtTokenProvider.getAuthentication(token);
+				SecurityContextHolder.getContext().setAuthentication(authentication);
+			}
+		} catch (RuntimeException e) {
+			SecurityContextHolder.clearContext();
 		}
 		filterChain.doFilter(request, response);
 	}
