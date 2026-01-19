@@ -55,16 +55,18 @@ public class ProjectClosingOrchestrator {
 
     public void processProject(Long projectId) {
 
-        // 1) 프로젝트 선점
-        if (!projectTx.tryAcquireClosing(projectId)) {
+
+
+        // 1) 프로젝트 선점 + 조회
+        Project project = projectTx.tryAcquireClosingAndGet(projectId);
+        if (project == null) {
             log.info("[CLOSE] skip acquire | projectId={}", projectId);
             return;
         }
 
-        // 임시 예외 처리
-        Project project = projectREP.findById(projectId).orElseThrow(
 
-        );
+
+
 
         // 2) 성공/실패 판정
         // 실패 흐름

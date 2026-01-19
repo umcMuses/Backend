@@ -24,6 +24,17 @@ public class ProjectTxSRV {
         return projectREP.tryAcquireClosing(projectId, LocalDateTime.now()) == 1;
     }
 
+
+    @Transactional
+    public Project tryAcquireClosingAndGet(Long projectId) {
+        int updated = projectREP.tryAcquireClosing(projectId, LocalDateTime.now());
+        if (updated == 0) {
+            return null;  // 선점 실패
+        }
+        return projectREP.findById(projectId)
+                .orElseThrow(() -> new IllegalStateException("선점 후 조회 실패"));
+    }
+
     //CLOSING -> SUCCESS/FAILED 확정
     @Transactional
     public boolean finalizeStatusFromClosing(Long projectId, FundingStatus status) {
