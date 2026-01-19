@@ -70,6 +70,13 @@ public class Project {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    @Column(name = "funding_status")
-    private String fundingStatus;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "funding_status", nullable = false)
+    private FundingStatus fundingStatus;
+
+    // 펀딩 성공 여부
+    public boolean isGoalAchieved() {
+        return achieveRate >= 100;
+    }
+
 }
