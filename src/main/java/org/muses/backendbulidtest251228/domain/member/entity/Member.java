@@ -51,16 +51,20 @@ public class Member extends BaseEntity {
 	private String introduction;
 	@Column(nullable = false)
 	private String birthday;
+	@Builder.Default
 	@ColumnDefault("0")
 	@Column(nullable = false)
 	private Integer gender = 0;
 
+	@Builder.Default
 	@ColumnDefault("0")
 	@Column(name = "ticket_count", nullable = false)
 	private Integer ticketCount = 0;
+	@Builder.Default
 	@ColumnDefault("0")
 	@Column(name = "support_count", nullable = false)
 	private Integer supportCount = 0;
+	@Builder.Default
 	@ColumnDefault("1")
 	@Column(name = "support_level", nullable = false)
 	private Integer supportLevel = 1;
