@@ -8,7 +8,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.awt.print.Pageable;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -32,7 +32,7 @@ public class ProjectTxSRV {
 
     // 재시도 프로젝트 찾기
     public List<Project> findStuckClosing(LocalDateTime threshold, int limit) {
-        return projectREP.findStuckClosing(threshold, (Pageable) PageRequest.of(0, limit));
+        return projectREP.findStuckClosing(threshold,  PageRequest.of(0, limit));
     }
 
 

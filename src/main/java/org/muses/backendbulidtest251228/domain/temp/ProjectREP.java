@@ -47,7 +47,7 @@ public interface ProjectREP extends JpaRepository<Project, Long> {
       WHERE p.status='CLOSING' AND p.updatedAt < :threshold
       ORDER BY p.updatedAt ASC
     """)
-    List<Project> findStuckClosing(@Param("threshold") LocalDateTime threshold, java.awt.print.Pageable pageable);
+    List<Project> findStuckClosing(@Param("threshold") LocalDateTime threshold, Pageable pageable);
 
 
 }
