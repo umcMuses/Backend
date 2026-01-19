@@ -36,4 +36,9 @@ public class OrderTxSRV {
     public boolean markFailedIfPaying(Long orderId, String reason, LocalDateTime nextRetryAt) {
         return orderREP.markFailedIfPaying(orderId, reason, nextRetryAt) == 1;
     }
+
+    @Transactional
+    public boolean updatePaymentOrderId(Long orderId, String pgOrderId){
+       return  orderREP.updatePaymentOrderId(orderId, pgOrderId) == 1;
+    }
 }

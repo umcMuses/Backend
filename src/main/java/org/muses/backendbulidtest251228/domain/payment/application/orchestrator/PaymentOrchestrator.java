@@ -63,6 +63,15 @@ public class PaymentOrchestrator {
         String idemKey = "order:" + orderId; //고정, 식별자
         PaymentENT payment = paymentTx.getOrCreate(orderId, idemKey, order.getTotalAmount());
 
+
+        // Payment 엔티티에 pgOrderId 저장 후 재사용
+        if (order.getPaymentOrderId() == null) {
+            String pgOrderId = "muses_order_" + orderId + "_" + UUID.randomUUID().toString().substring(0, 8);
+            orderTx.updatePaymentOrderId(order.getId(), pgOrderId);
+
+        }
+        String paymentOrderId = order.getPaymentOrderId();
+
         if (payment.getStatus() == PaymentStatus.SUCCESS) {
             orderTx.markPaidIfPaying(orderId);
             return;
@@ -82,8 +91,6 @@ public class PaymentOrchestrator {
         BillingApproveResDTO res = null;
         Exception ex = null;
 
-        // 예: "muses_order_123_a1b2c3d4..."
-        String paymentOrderId = "muses_order_" + orderId + "_" + UUID.randomUUID().toString().substring(0, 8);
 
 
         try {

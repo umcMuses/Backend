@@ -1,5 +1,6 @@
 package org.muses.backendbulidtest251228.domain.order.repository;
 
+import jakarta.transaction.Transactional;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -66,5 +67,15 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
     """)
     List<OrderENT> findRetryTargets(@Param("maxRetry") int maxRetry, @Param("now") LocalDateTime now);
 
+    
+    @Query("""
+        update OrderENT o
+           set o.paymentOrderId = :paymentOrderId
+         where o.id = :orderId
+    """)
+    int updatePaymentOrderId(
+            @Param("orderId") Long orderId,
+            @Param("paymentOrderId") String paymentOrderId
+    );
 
 }
