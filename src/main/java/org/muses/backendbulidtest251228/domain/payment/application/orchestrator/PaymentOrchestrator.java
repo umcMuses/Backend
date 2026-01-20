@@ -16,6 +16,7 @@ import org.muses.backendbulidtest251228.domain.temp.RewardRepository;
 import org.muses.backendbulidtest251228.domain.toss.TossBillingClient;
 import org.muses.backendbulidtest251228.domain.toss.dto.BillingApproveResDTO;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDateTime;
@@ -38,6 +39,7 @@ public class PaymentOrchestrator {
     private final ObjectMapper om = new ObjectMapper();
     private static final int MAX_RETRY = 5;
 
+
     public void processOrderPayment(Long orderId) {
         // 1) 주문 선점
         // row = 0 이면 즉시 종료, 이미 다른 프로세스가 잡음
@@ -47,8 +49,7 @@ public class PaymentOrchestrator {
         }
 
         // 2) 주문
-        // 임시 예외 처리
-        OrderENT order = orderREP.findById(orderId).orElseThrow();
+        OrderENT order = orderREP.findByIdWithItems(orderId).orElseThrow();
 
 
 
@@ -64,13 +65,15 @@ public class PaymentOrchestrator {
         PaymentENT payment = paymentTx.getOrCreate(orderId, idemKey, order.getTotalAmount());
 
 
-        // Payment 엔티티에 pgOrderId 저장 후 재사용
-        if (order.getPaymentOrderId() == null) {
-            String pgOrderId = "muses_order_" + orderId + "_" + UUID.randomUUID().toString().substring(0, 8);
-            orderTx.updatePaymentOrderId(order.getId(), pgOrderId);
 
-        }
+
         String paymentOrderId = order.getPaymentOrderId();
+
+        if (paymentOrderId == null) {
+            paymentOrderId = "muses_order_" + orderId + "_" + UUID.randomUUID().toString().substring(0, 8);
+            orderTx.updatePaymentOrderId(order.getId(), paymentOrderId);
+            order.setPaymentOrderId(paymentOrderId); //  현재 객체에도 직접 세팅
+        }
 
         if (payment.getStatus() == PaymentStatus.SUCCESS) {
             orderTx.markPaidIfPaying(orderId);
@@ -105,6 +108,7 @@ public class PaymentOrchestrator {
         } catch (Exception e) {
 
             ex = e;
+            e.printStackTrace();
             log.warn("[PAY] PG call error | orderId={} msg={}", orderId, e.getMessage(), e);
         }
 
