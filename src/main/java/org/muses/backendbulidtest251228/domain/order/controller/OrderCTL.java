@@ -30,7 +30,7 @@ public class OrderCTL {
     @GetMapping("/prepare")
     public ResponseEntity<ApiResponse<OrderCreateResDTO>> createOrder(@Valid @RequestBody OrderCreateReqDTO req) {
 
-        Long userId = 1L; // 임시 스프링 시큐리티 도입시 반영 필요
+        Long userId = 7L; // 임시 스프링 시큐리티 도입시 반영 필요
 
 
         OrderCreateResDTO resDTO = orderSRV.prepare(successUrl, failUrl, userId, req);
