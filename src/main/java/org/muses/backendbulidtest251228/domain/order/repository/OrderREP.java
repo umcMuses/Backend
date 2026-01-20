@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface OrderREP extends JpaRepository<OrderENT, Long> {
 
@@ -67,7 +68,7 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
     """)
     List<OrderENT> findRetryTargets(@Param("maxRetry") int maxRetry, @Param("now") LocalDateTime now);
 
-    
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
         update OrderENT o
            set o.paymentOrderId = :paymentOrderId
@@ -77,5 +78,9 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
             @Param("orderId") Long orderId,
             @Param("paymentOrderId") String paymentOrderId
     );
+
+
+    @Query("select o from OrderENT o join fetch o.orderItems where o.id = :id")
+    Optional<OrderENT> findByIdWithItems(@Param("id") Long id);
 
 }
