@@ -47,7 +47,7 @@ public class OrderENT {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "customer_key", nullable = false, unique = true, length = 100)
+    @Column(name = "customer_key", nullable = true, unique = true, length = 100)
     private String customerKey;
 
     @Setter
