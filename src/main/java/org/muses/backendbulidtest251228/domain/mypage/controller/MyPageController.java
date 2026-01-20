@@ -27,8 +27,14 @@ public class MyPageController {
         return myPageService.updateProfile(request);
     }
 
-    @PostMapping(value = "/profile/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public UpdateProfileImageResponse updateProfileImage(@RequestPart("image") MultipartFile image) {
+    // 마지막에 건들 예정
+    @PatchMapping(
+            value = "/profile/image",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public UpdateProfileImageResponse updateProfileImage(
+            @RequestPart("image") MultipartFile image
+    ) {
         return myPageService.updateProfileImage(image);
     }
 }
