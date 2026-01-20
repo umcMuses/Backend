@@ -23,7 +23,7 @@ public class PaymentTxSRV {
     // 동시성 충돌 복구
     @Transactional
     public PaymentENT getOrCreate(Long orderId, String idemKey, BigDecimal amount) {
-        return paymentREP.findByOrderId(orderId).orElseGet(() -> {
+        return paymentREP.findByOrder_Id(orderId).orElseGet(() -> {
             try {
                 OrderENT order = orderREP.findById(orderId)
                         .orElseThrow(() -> new IllegalArgumentException("order not found. orderId=" + orderId));
@@ -37,7 +37,7 @@ public class PaymentTxSRV {
                         .build());
             } catch (DataIntegrityViolationException e) {
                 // 동시 생성 충돌 -> 재조회로 복구
-                return paymentREP.findByOrderId(orderId).orElseThrow(() -> e);
+                return paymentREP.findByOrder_Id(orderId).orElseThrow(() -> e);
             }
         });
     }
