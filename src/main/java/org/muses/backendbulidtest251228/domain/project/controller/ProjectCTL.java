@@ -6,15 +6,28 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.muses.backendbulidtest251228.controller.TestController;
 import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
-import org.muses.backendbulidtest251228.domain.project.dto.request.*;
-import org.muses.backendbulidtest251228.domain.project.dto.response.*;
+import org.muses.backendbulidtest251228.domain.project.dto.request.FundingRequestDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.request.InfoRequestDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.request.OutlineRequestDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.request.ProjectCreateRequestDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.request.ProjectSearchRequestDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.request.RewardsRequestDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.request.StoryRequestDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.response.ProjectCardResponseDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.response.ProjectDetailResponseDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.response.ProjectListResponseDTO;
 import org.muses.backendbulidtest251228.domain.project.service.ProjectSRV;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -27,7 +40,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ProjectCTL {
 
-    private static final Logger log = LoggerFactory.getLogger(ProjectCTL.class);
     private final ProjectSRV projectSRV;
 
     // ==================== 프로젝트 초기 생성 ====================

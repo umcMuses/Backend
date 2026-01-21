@@ -1,18 +1,29 @@
 package org.muses.backendbulidtest251228.domain.project.service;
 
 import lombok.RequiredArgsConstructor;
-import org.muses.backendbulidtest251228.controller.TestController;
-import org.muses.backendbulidtest251228.domain.project.dto.request.*;
+import org.muses.backendbulidtest251228.domain.project.dto.request.FundingRequestDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.request.InfoRequestDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.request.OutlineRequestDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.request.ProjectCreateRequestDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.request.ProjectSearchRequestDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.request.RewardsRequestDTO;
+import org.muses.backendbulidtest251228.domain.project.dto.request.StoryRequestDTO;
 import org.muses.backendbulidtest251228.domain.project.dto.response.ProjectCardResponseDTO;
 import org.muses.backendbulidtest251228.domain.project.dto.response.ProjectDetailResponseDTO;
 import org.muses.backendbulidtest251228.domain.project.dto.response.ProjectListResponseDTO;
 import org.muses.backendbulidtest251228.domain.project.dto.response.RewardResponseDTO;
-import org.muses.backendbulidtest251228.domain.project.entity.*;
+import org.muses.backendbulidtest251228.domain.project.entity.ProjectContentENT;
+import org.muses.backendbulidtest251228.domain.project.entity.ProjectENT;
+import org.muses.backendbulidtest251228.domain.project.entity.ProjectManagerENT;
+import org.muses.backendbulidtest251228.domain.project.entity.ProjectTagENT;
+import org.muses.backendbulidtest251228.domain.project.entity.RewardENT;
 import org.muses.backendbulidtest251228.domain.project.enums.FundingStatus;
 import org.muses.backendbulidtest251228.domain.project.mapper.ProjectMapper;
-import org.muses.backendbulidtest251228.domain.project.repository.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.muses.backendbulidtest251228.domain.project.repository.ProjectContentRepo;
+import org.muses.backendbulidtest251228.domain.project.repository.ProjectManagerRepo;
+import org.muses.backendbulidtest251228.domain.project.repository.ProjectRepo;
+import org.muses.backendbulidtest251228.domain.project.repository.ProjectTagRepo;
+import org.muses.backendbulidtest251228.domain.project.repository.RewardRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,8 +38,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ProjectSRVI implements ProjectSRV {
-
-    private static final Logger log = LoggerFactory.getLogger(ProjectSRVI.class);
 
     private final ProjectRepo projectRepo;
     private final ProjectTagRepo projectTagRepo;
