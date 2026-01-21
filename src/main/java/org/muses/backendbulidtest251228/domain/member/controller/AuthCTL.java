@@ -3,10 +3,10 @@ package org.muses.backendbulidtest251228.domain.member.controller;
 import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
 import org.muses.backendbulidtest251228.domain.member.dto.AuthRequestDT;
 import org.muses.backendbulidtest251228.domain.member.dto.AuthResponseDT;
-import org.muses.backendbulidtest251228.domain.member.repository.MemberRepo;
 import org.muses.backendbulidtest251228.domain.member.service.AuthSV;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 public class AuthCTL {
 
 	private final AuthSV authSV;
-	private final MemberRepo memberRepo;
 
 	@PostMapping("/signup")
 	public ApiResponse<Long> signup(
@@ -58,4 +57,20 @@ public class AuthCTL {
 	public ApiResponse<Boolean> checkNickName(@RequestParam String nickName) {
 		return ApiResponse.success(authSV.checkNickNameDuplicate(nickName));
 	}
+
+	@PostMapping("/logout")
+	public ApiResponse<String> logout(
+			@AuthenticationPrincipal UserDetails userDetails) {
+		// 추후 구현 예정
+		return ApiResponse.success("로그아웃 되었습니다.");
+	}
+
+	@DeleteMapping("/withdraw")
+	public ApiResponse<String> withdraw(
+			@AuthenticationPrincipal UserDetails userDetails) {
+		// 추후 추가 구현 예정
+		authSV.withdraw(userDetails.getUsername());
+		return ApiResponse.success("회원탈퇴가 완료되었습니다.");
+	}
+
 }

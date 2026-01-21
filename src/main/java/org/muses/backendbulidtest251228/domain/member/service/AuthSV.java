@@ -100,4 +100,12 @@ public class AuthSV {
 	public boolean checkNickNameDuplicate(String nickName) {
 		return memberRepo.existsByNickName(nickName);
 	}
+
+	@Transactional
+	public void withdraw(String email) {
+		Member member = memberRepo.findByEmail(email)
+			.orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+		// MVP 이므로 일단 즉시 삭제만 구현
+		memberRepo.delete(member);
+	}
 }
