@@ -86,4 +86,14 @@ public class Member extends BaseEntity {
 		this.role = Role.MAKER;	// GUEST -> MAKER
 	}
 
+	public void changeProfile(String nickName, String introduction, String birthday, Integer gender) {
+		this.nickName = nickName;
+		this.introduction = introduction;
+		this.birthday = birthday;
+		if (gender != null) this.gender = gender;
+	}
+
+    public void changeProfileImage(String profileImgUrl) {
+        this.profileImgUrl = profileImgUrl;
+    }
 }
