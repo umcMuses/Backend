@@ -88,7 +88,11 @@ public class ProjectClosingOrchestrator {
         // 프로젝트 ID 가 동일하고 아직 주문이 되지 않은 주문들 모으기
         List<OrderENT> reserved = orderREP.findByProjectIdAndStatus(projectId, OrderStatus.RESERVED);
         for (OrderENT o : reserved) {
-            paymentOrchestrator.processOrderPayment(o.getId());
+            try {
+                paymentOrchestrator.processOrderPayment(o.getId());
+            } catch (Exception e) {
+                log.error("[CLOSE] payment fail | projectId={} orderId={}", projectId, o.getId(), e);
+            }
         }
 
         // 4) 프로젝트 SUCCESS 확정(프로젝트 성공과 개별 결제 성공은 분리 정책)

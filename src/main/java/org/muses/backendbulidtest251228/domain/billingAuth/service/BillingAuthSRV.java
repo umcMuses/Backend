@@ -44,6 +44,12 @@ public class BillingAuthSRV{
             throw new IllegalArgumentException("customerKey mismatch");
         }
 
+        if (billingAuthREP.findByOrder(order).isPresent()) {
+            throw new IllegalStateException("billing auth already exists. orderId=" + orderId);
+        }
+
+
+
 
         BillingIssueResDTO issued =
                 tossBillingClient.issueBillingKey(req.getAuthKey(), req.getCustomerKey());

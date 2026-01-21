@@ -59,6 +59,10 @@ public class PaymentENT {
 
     }
 
+    public void markRequested(){
+        this.status = PaymentStatus.READY;
+    }
+
 
     public void markSuccess(String paymentKey, String res) {
         this.status = PaymentStatus.SUCCESS;

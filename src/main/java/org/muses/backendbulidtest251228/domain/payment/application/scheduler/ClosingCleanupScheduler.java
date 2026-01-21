@@ -25,7 +25,12 @@ public class ClosingCleanupScheduler {
         List<Project> stuck = projectTx.findStuckClosing(LocalDateTime.now().minusMinutes(10), 100);
         log.info("[CLEANUP] stuckClosing={}", stuck.size());
         for (Project p : stuck) {
-            orchestrator.processProject(p.getId());
+            try {
+                orchestrator.processProject(p.getId());
+            } catch (Exception e) {
+                log.error("[CLEANUP] projectId={} 처리 실패", p.getId(), e);
+            }
+
         }
     }
 }

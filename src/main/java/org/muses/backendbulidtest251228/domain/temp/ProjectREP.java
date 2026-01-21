@@ -25,7 +25,7 @@ public interface ProjectREP extends JpaRepository<Project, Long> {
     @Query("""
       UPDATE Project p
       SET p.fundingStatus='CLOSING', p.updatedAt=:now
-      WHERE p.id=:id AND p.status='FUNDING'
+      WHERE p.id=:id AND p.fundingStatus='FUNDING'
     """)
     int tryAcquireClosing(@Param("id") Long id, @Param("now") LocalDateTime now);
 
@@ -44,7 +44,7 @@ public interface ProjectREP extends JpaRepository<Project, Long> {
     //청소배치로 오래 멈춘 프로젝트를 찾아낸다
     @Query("""
       SELECT p FROM Project p
-      WHERE p.status='CLOSING' AND p.updatedAt < :threshold
+      WHERE p.fundingStatus='CLOSING' AND p.updatedAt < :threshold
       ORDER BY p.updatedAt ASC
     """)
     List<Project> findStuckClosing(@Param("threshold") LocalDateTime threshold, Pageable pageable);

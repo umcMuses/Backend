@@ -27,7 +27,11 @@ public class PaymentRetryScheduler {
         List<OrderENT> targets = orderREP.findRetryTargets(MAX_RETRY, LocalDateTime.now());
         log.info("[RETRY] targets={}", targets.size());
         for (OrderENT o : targets) {
-            paymentOrchestrator.processOrderPayment(o.getId());
+            try {
+                paymentOrchestrator.processOrderPayment(o.getId());
+            } catch (Exception e) {
+                log.warn("[RETRY] orderId={} failed", o.getId(), e);
+            }
         }
     }
 

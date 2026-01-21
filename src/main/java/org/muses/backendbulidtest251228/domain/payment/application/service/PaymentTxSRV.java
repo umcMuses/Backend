@@ -1,6 +1,7 @@
 package org.muses.backendbulidtest251228.domain.payment.application.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
 import org.muses.backendbulidtest251228.domain.payment.entity.PaymentENT;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentTxSRV {
@@ -48,6 +50,7 @@ public class PaymentTxSRV {
         // 임시 예외 처리
         PaymentENT p = paymentREP.findById(paymentId).orElseThrow();
         if (p.getStatus() == PaymentStatus.SUCCESS) return;
+
         paymentREP.save(p);
     }
 
@@ -65,6 +68,12 @@ public class PaymentTxSRV {
     @Transactional
     public void markFailed(Long paymentId, String reason, String resBody) {
         PaymentENT p = paymentREP.findById(paymentId).orElseThrow();
+        if (p.getStatus() == PaymentStatus.SUCCESS) {
+            log.warn("이미 성공한 결제는 실패 처리 불가. paymentId={}", paymentId);
+            return;
+        }
+
+
         p.markFailed(reason, resBody);
         paymentREP.save(p);
     }

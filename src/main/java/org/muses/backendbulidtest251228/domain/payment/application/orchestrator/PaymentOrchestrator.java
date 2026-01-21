@@ -1,5 +1,6 @@
 package org.muses.backendbulidtest251228.domain.payment.application.orchestrator;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.muses.backendbulidtest251228.domain.billingAuth.entity.BillingAuthENT;
@@ -16,8 +17,9 @@ import org.muses.backendbulidtest251228.domain.temp.RewardRepository;
 import org.muses.backendbulidtest251228.domain.toss.TossBillingClient;
 import org.muses.backendbulidtest251228.domain.toss.dto.BillingApproveResDTO;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import tools.jackson.databind.ObjectMapper;
+
+
+
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -83,20 +85,33 @@ public class PaymentOrchestrator {
         paymentTx.markRequested(payment.getId());
 
 
-        BillingAuthENT billingAuth = billingAuthREP.findByOrder(order).orElseThrow();
+        /*BillingAuthENT billingAuth = billingAuthREP.findByOrder(order).orElseThrow();
 
         Long rewardId = order.getOrderItems().get(0).getRewardId();
 
-
         Reward reward = rewardRepository.findById(rewardId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 리워드입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 리워드입니다."));*/
+
+
 
         BillingApproveResDTO res = null;
         Exception ex = null;
 
+        BillingAuthENT billingAuth = null;
+        Reward reward = null;
 
 
         try {
+            if (order.getOrderItems() == null || order.getOrderItems().isEmpty()) {
+                throw new IllegalStateException("주문 항목이 없습니다.");
+            }
+            Long rewardId = order.getOrderItems().get(0).getRewardId();
+
+            billingAuth = billingAuthREP.findByOrder(order)
+                    .orElseThrow(() -> new IllegalStateException("BillingAuth 없음"));
+            reward = rewardRepository.findById(rewardId)
+                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 리워드입니다."));
+
             // 4) pg 호출
             res = tossClient.approveWithBillingKey(
                     billingAuth,
@@ -125,7 +140,7 @@ public class PaymentOrchestrator {
             return;
         }
 
-        String reason = (res != null && res.getFailure().getMessage() != null)
+        String reason = (res != null && res.getFailure() != null && res.getFailure().getMessage() != null)
                 ? res.getFailure().getMessage()
                 : (ex != null ? ex.getMessage() : "PG 호출 실패");
 
