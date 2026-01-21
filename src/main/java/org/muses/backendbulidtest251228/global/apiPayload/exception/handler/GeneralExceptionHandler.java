@@ -19,10 +19,10 @@ public class GeneralExceptionHandler {
             GeneralException ex
     ) {
 
-        log.warn("[Business Error] Code: {}, Message: {}", ex.getCode().getCode(), ex.getCode().getMessage());
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.fail(ex.getCode()));
+        return ResponseEntity.status(ex.getCode().getStatus())
+                .body(ApiResponse.fail(
+                        ex.getCode()
+                ));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

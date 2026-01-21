@@ -1,6 +1,7 @@
 package org.muses.backendbulidtest251228.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import org.muses.backendbulidtest251228.global.apiPayload.code.error.BaseErrorCode;
 
 /**
  * 통일된 API 응답 포맷
@@ -67,6 +68,14 @@ public class ApiResponse<T> {
     }
 
     public static <T> ApiResponse<T> fail(ErrorCode errorCode, Object detail) {
+        return fail(errorCode.getCode(), errorCode.getMessage(), detail);
+    }
+
+    public static <T> ApiResponse<T> fail(BaseErrorCode errorCode) {
+        return fail(errorCode.getCode(), errorCode.getMessage());
+    }
+
+    public static <T> ApiResponse<T> fail(BaseErrorCode errorCode, Object detail) {
         return fail(errorCode.getCode(), errorCode.getMessage(), detail);
     }
 
