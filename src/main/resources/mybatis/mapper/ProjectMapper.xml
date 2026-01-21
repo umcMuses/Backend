@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.muses.backendbulidtest251228.domain.project.mapper.ProjectMapper">
+
+    <!-- 프로젝트 카드 목록 조회 (필터링 + 페이징) -->
+    <select id="findProjectCards" resultType="org.muses.backendbulidtest251228.domain.project.dto.response.ProjectCardResponseDTO">
+        select
+            p.project_id as projectId,
+            p.thumbnail_url as thumbnailUrl,
+            p.title,
+            p.achieve_rate as achieveRate,
+            p.deadline,
+            datediff(p.deadline, now()) as dDay,
+            p.funding_status as fundingStatus,
+            case when p.funding_status = 'SCHEDULED' then true else false end as isScheduled,
+            p.opening
+        from projects p
+        where p.status not in ('DRAFT', 'PENDING')
+        <if test="region != null and region != ''">
+            and p.region = #{region}
+        </if>
+        <if test="fundingStatus != null and fundingStatus != ''">
+            and p.funding_status = #{fundingStatus}
+        </if>
+        <if test="tag != null and tag != ''">
+            and p.project_id in (
+                select pt.project_id from project_tags pt where pt.tag_name like concat('%', #{tag}, '%')
+            )
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (p.title like concat('%', #{keyword}, '%') or p.description like concat('%', #{keyword}, '%'))
+        </if>
+        order by p.created_at desc
+        limit #{limit} offset #{offset}
+    </select>
+
+    <!-- 전체 개수 조회 (페이징용) -->
+    <select id="countProjectCards" resultType="int">
+        select count(*)
+        from projects p
+        where p.status not in ('DRAFT', 'PENDING')
+        <if test="region != null and region != ''">
+            and p.region = #{region}
+        </if>
+        <if test="fundingStatus != null and fundingStatus != ''">
+            and p.funding_status = #{fundingStatus}
+        </if>
+        <if test="tag != null and tag != ''">
+            and p.project_id in (
+                select pt.project_id from project_tags pt where pt.tag_name like concat('%', #{tag}, '%')
+            )
+        </if>
+        <if test="keyword != null and keyword != ''">
+            and (p.title like concat('%', #{keyword}, '%') or p.description like concat('%', #{keyword}, '%'))
+        </if>
+    </select>
+
+</mapper>

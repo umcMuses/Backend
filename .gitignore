@@ -35,3 +35,17 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### 환경별 설정 파일 (민감 정보) ###
+application-local.properties
+application-dev.properties
+application-prod.properties
+src/main/resources/application-*.properties
+
+### 로그 ###
+*.log
+logs/
+
+### 환경 변수 ###
+.env
+.env.local
