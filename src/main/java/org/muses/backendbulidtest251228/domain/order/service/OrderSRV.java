@@ -8,6 +8,8 @@ import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateReqDTO;
 import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateResDTO;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
+import org.muses.backendbulidtest251228.domain.order.exception.OrderException;
+import org.muses.backendbulidtest251228.domain.order.exception.code.OrderErrorCode;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
 import org.muses.backendbulidtest251228.domain.orderItem.entity.OrderItemENT;
 import org.muses.backendbulidtest251228.domain.temp.Member;
@@ -102,6 +104,9 @@ public class OrderSRV {
 
         OrderENT order = orderREP.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("order not found. orderId=" + orderId));
+
+        OrderENT orderENT = orderREP.findById(orderId)
+                .orElseThrow(() -> new OrderException(OrderErrorCode.INVALID));
 
 
 
