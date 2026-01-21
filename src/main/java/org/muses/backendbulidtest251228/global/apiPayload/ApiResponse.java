@@ -1,4 +1,6 @@
-package org.muses.backendbulidtest251228.common;
+package org.muses.backendbulidtest251228.global.apiPayload;
+
+import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

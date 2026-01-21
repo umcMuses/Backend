@@ -1,4 +1,4 @@
-package org.muses.backendbulidtest251228.common;
+package org.muses.backendbulidtest251228.global.apiPayload.code;
 
 /**
  * 에러 코드 정의
