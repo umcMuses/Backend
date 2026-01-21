@@ -1,4 +1,4 @@
-package org.muses.backendbulidtest251228.global.config;
+package org.muses.backendbulidtest251228.global.config.scheduler;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
