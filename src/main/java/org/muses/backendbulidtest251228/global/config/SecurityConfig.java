@@ -44,6 +44,7 @@ public class SecurityConfig {
 				// 관리자 페이지
 				.requestMatchers("/api/admin/**").hasRole("ADMIN")
 				// 그 외 모든 요청
+				.requestMatchers("/api/auth/profile/**").authenticated()
 				.anyRequest().authenticated()
 			)
 			// JWT 필터 등록

@@ -1,5 +1,8 @@
 package org.muses.backendbulidtest251228.domain.member.entity;
 
 public enum Role {
-	MAKER, CREATOR, ADMIN
+	GUEST,	// 1단계: 프로필 미설정
+	MAKER,	// 2단계: 정회원
+	CREATOR,
+	ADMIN
 }

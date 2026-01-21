@@ -1,7 +1,7 @@
 package org.muses.backendbulidtest251228.controller;
 
-import org.muses.backendbulidtest251228.common.ApiResponse;
-import org.muses.backendbulidtest251228.common.ErrorCode;
+import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
+import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;

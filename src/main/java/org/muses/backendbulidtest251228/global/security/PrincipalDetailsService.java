@@ -1,7 +1,7 @@
 package org.muses.backendbulidtest251228.global.security;
 
 import org.muses.backendbulidtest251228.domain.member.entity.Member;
-import org.muses.backendbulidtest251228.domain.member.repository.MemberRepository;
+import org.muses.backendbulidtest251228.domain.member.repository.MemberRepo;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PrincipalDetailsService implements UserDetailsService {
 
-	private final MemberRepository memberRepository;
+	private final MemberRepo memberRepository;
 
 	@Override
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {

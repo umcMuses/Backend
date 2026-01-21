@@ -37,6 +37,9 @@ public class JwtTokenProvider {
 
 	@PostConstruct
 	protected void init() {
+		if (secretKeyPlain == null || secretKeyPlain.isBlank()) {
+			throw new IllegalStateException("jwt.secret 프로퍼티가 설정되지 않았습니다.");
+		}
 		byte[] keyBytes = Decoders.BASE64.decode(secretKeyPlain);
 		this.key = Keys.hmacShaKeyFor(keyBytes);
 	}
@@ -77,13 +80,13 @@ public class JwtTokenProvider {
 			Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
 			return true;
 		} catch (SecurityException | MalformedJwtException e) {
-			log.info("invalid JWT 서명입니다.");
+			log.warn("invalid JWT 서명입니다.");
 		} catch (ExpiredJwtException e) {
-			log.info("만료된 JWT 토큰입니다.");
+			log.warn("만료된 JWT 토큰입니다.");
 		} catch (UnsupportedJwtException e) {
-			log.info("지원되지 않는 JWT 토큰입니다.");
+			log.warn("지원되지 않는 JWT 토큰입니다.");
 		} catch (IllegalArgumentException e) {
-			log.info("잘못된 JWT 토큰입니다.");
+			log.warn("잘못된 JWT 토큰입니다.");
 		}
 		return false;
 	}

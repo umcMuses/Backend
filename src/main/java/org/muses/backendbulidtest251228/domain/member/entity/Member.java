@@ -41,20 +41,17 @@ public class Member extends BaseEntity {
 	private String name;
 	@Column(nullable = false, unique = true)
 	private String email;
-	@Column(length = 20)
+	@Column(name = "phone_number", length = 20)
 	private String phoneNumber;
+	// -- 프로필 설정 --
 	@Column(name = "profile_img_url")
 	private String profileImgUrl;
-	@Column(nullable = false, unique = true)
+	@Column(name = "nick_name", unique = true)
 	private String nickName;
-	@Column(nullable = false, length = 500)
+	@Column(length = 500)
 	private String introduction;
-	@Column(nullable = false)
 	private String birthday;
-	@Builder.Default
-	@ColumnDefault("0")
-	@Column(nullable = false)
-	private Integer gender = 0;
+	private Integer gender;
 
 	@Builder.Default
 	@ColumnDefault("0")
@@ -68,4 +65,25 @@ public class Member extends BaseEntity {
 	@ColumnDefault("1")
 	@Column(name = "support_level", nullable = false)
 	private Integer supportLevel = 1;
+
+	// -- 생성자 --
+	@Builder
+	public Member(String email, String passwd, String name, String phoneNumber, String providerId, Role role) {
+		this.email = email;
+		this.passwd = passwd;
+		this.name = name;
+		this.phoneNumber = phoneNumber;
+		this.providerId = providerId;
+		this.role = role;
+	}
+
+	public void completeSignup(String profileImgUrl, String nickName, String introduction, String birthday, Integer gender) {
+		this.profileImgUrl = profileImgUrl;
+		this.nickName = nickName;
+		this.introduction = introduction;
+		this.birthday = birthday;
+		this.gender = gender;
+		this.role = Role.MAKER;	// GUEST -> MAKER
+	}
+
 }
