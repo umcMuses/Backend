@@ -1,6 +1,6 @@
 package org.muses.backendbulidtest251228.domain.member.dto;
 
-import org.muses.backendbulidtest251228.domain.member.entity.Role;
+import org.muses.backendbulidtest251228.domain.member.enums.Role;
 
 import lombok.Data;
 

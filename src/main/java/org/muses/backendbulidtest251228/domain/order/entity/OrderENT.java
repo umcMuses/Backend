@@ -5,8 +5,8 @@ import org.muses.backendbulidtest251228.domain.billingAuth.entity.BillingAuthENT
 import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
 import org.muses.backendbulidtest251228.domain.orderItem.entity.OrderItemENT;
 import org.muses.backendbulidtest251228.domain.payment.entity.PaymentENT;
-import org.muses.backendbulidtest251228.domain.temp.Member;
-import org.muses.backendbulidtest251228.domain.temp.Project;
+import org.muses.backendbulidtest251228.domain.member.entity.Member;
+import org.muses.backendbulidtest251228.domain.project.entity.ProjectENT;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -35,7 +35,7 @@ public class OrderENT {
     // 대상 프로젝트 (프로젝트 1 : 주문 N)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
-    private Project project;
+    private ProjectENT project;
 
     @Column(name = "total_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal totalAmount;

@@ -20,6 +20,14 @@ public class PrincipalDetails implements UserDetails {
 		return member;
 	}
 
+	public Long getId() {
+		return member.getId();
+	}
+
+	public Long getMemberId() {
+		return member.getId();
+	}
+
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
 		// Role Enum -> Spring Security 권한으로 변환

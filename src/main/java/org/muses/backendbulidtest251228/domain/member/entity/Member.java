@@ -1,6 +1,8 @@
 package org.muses.backendbulidtest251228.domain.member.entity;
 
 import org.hibernate.annotations.ColumnDefault;
+import org.muses.backendbulidtest251228.domain.member.enums.Provider;
+import org.muses.backendbulidtest251228.domain.member.enums.Role;
 import org.muses.backendbulidtest251228.global.entity.BaseEntity;
 
 import jakarta.persistence.Column;

@@ -12,10 +12,10 @@ import org.muses.backendbulidtest251228.domain.payment.application.service.Order
 import org.muses.backendbulidtest251228.domain.payment.application.service.PaymentTxSRV;
 import org.muses.backendbulidtest251228.domain.payment.entity.PaymentENT;
 import org.muses.backendbulidtest251228.domain.payment.enums.PaymentStatus;
-import org.muses.backendbulidtest251228.domain.temp.Reward;
-import org.muses.backendbulidtest251228.domain.temp.RewardRepository;
+import org.muses.backendbulidtest251228.domain.project.entity.RewardENT;
+import org.muses.backendbulidtest251228.domain.project.repository.RewardRepo;
 import org.muses.backendbulidtest251228.domain.toss.TossBillingClient;
-import org.muses.backendbulidtest251228.domain.toss.dto.BillingApproveResDTO;
+import org.muses.backendbulidtest251228.domain.toss.dto.BillingApproveResDT;
 import org.springframework.stereotype.Service;
 
 
@@ -31,7 +31,7 @@ public class PaymentOrchestrator {
 
     private final OrderREP orderREP;
     private final BillingAuthREP billingAuthREP;
-    private final RewardRepository rewardRepository;
+    private final RewardRepo rewardRepo;
 
     private final OrderTxSRV orderTx;
     private final PaymentTxSRV paymentTx;
@@ -94,11 +94,11 @@ public class PaymentOrchestrator {
 
 
 
-        BillingApproveResDTO res = null;
+        BillingApproveResDT res = null;
         Exception ex = null;
 
         BillingAuthENT billingAuth = null;
-        Reward reward = null;
+        RewardENT reward = null;
 
 
         try {
@@ -109,14 +109,14 @@ public class PaymentOrchestrator {
 
             billingAuth = billingAuthREP.findByOrder(order)
                     .orElseThrow(() -> new IllegalStateException("BillingAuth 없음"));
-            reward = rewardRepository.findById(rewardId)
+            reward = rewardRepo.findById(rewardId)
                     .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 리워드입니다."));
 
             // 4) pg 호출
             res = tossClient.approveWithBillingKey(
                     billingAuth,
                     payment.getAmount(),
-                    reward.getTitle(),
+                    reward.getRewardName(),
                     idemKey,
                     paymentOrderId
             );

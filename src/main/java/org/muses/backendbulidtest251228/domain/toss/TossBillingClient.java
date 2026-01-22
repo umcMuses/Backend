@@ -2,10 +2,10 @@ package org.muses.backendbulidtest251228.domain.toss;
 
 import lombok.extern.slf4j.Slf4j;
 import org.muses.backendbulidtest251228.domain.billingAuth.entity.BillingAuthENT;
-import org.muses.backendbulidtest251228.domain.toss.dto.BillingApproveReqDTO;
-import org.muses.backendbulidtest251228.domain.toss.dto.BillingApproveResDTO;
-import org.muses.backendbulidtest251228.domain.toss.dto.BillingIssueReqDTO;
-import org.muses.backendbulidtest251228.domain.toss.dto.BillingIssueResDTO;
+import org.muses.backendbulidtest251228.domain.toss.dto.BillingApproveReqDT;
+import org.muses.backendbulidtest251228.domain.toss.dto.BillingApproveResDT;
+import org.muses.backendbulidtest251228.domain.toss.dto.BillingIssueReqDT;
+import org.muses.backendbulidtest251228.domain.toss.dto.BillingIssueResDT;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -50,14 +50,14 @@ public class TossBillingClient {
                 .build();
     }
 
-    public BillingIssueResDTO issueBillingKey(String authKey, String customerKey) {
-        BillingIssueReqDTO req = new BillingIssueReqDTO(authKey, customerKey);
+    public BillingIssueResDT issueBillingKey(String authKey, String customerKey) {
+        BillingIssueReqDT req = new BillingIssueReqDT(authKey, customerKey);
 
         return webClient.post()
                 .uri("/v1/billing/authorizations/issue")
                 .bodyValue(req)
                 .retrieve()
-                .bodyToMono(BillingIssueResDTO.class)
+                .bodyToMono(BillingIssueResDT.class)
                 .block();
     }
 
@@ -72,7 +72,7 @@ public class TossBillingClient {
     }
 
     // 자동 결제 승인
-    public BillingApproveResDTO approveWithBillingKey(
+    public BillingApproveResDT approveWithBillingKey(
             BillingAuthENT billingAuth,
             BigDecimal amount,
             String title,
@@ -81,7 +81,7 @@ public class TossBillingClient {
     ) {
 
 
-        BillingApproveReqDTO req = BillingApproveReqDTO.builder()
+        BillingApproveReqDT req = BillingApproveReqDT.builder()
                 .amount(amount)
                 .customerKey(billingAuth.getCustomerKey())
                 .orderId(paymentOrderId)
@@ -93,7 +93,7 @@ public class TossBillingClient {
                 .header("Idempotency-Key", idemKey)
                 .bodyValue(req)
                 .retrieve()
-                .bodyToMono(BillingApproveResDTO.class)
+                .bodyToMono(BillingApproveResDT.class)
                 .block();
     }
 }

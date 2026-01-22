@@ -2,7 +2,7 @@ package org.muses.backendbulidtest251228.domain.billingAuth.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.muses.backendbulidtest251228.common.ApiResponse;
+import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
 import org.muses.backendbulidtest251228.domain.billingAuth.dto.BillingAuthIssueReqDTO;
 import org.muses.backendbulidtest251228.domain.billingAuth.service.BillingAuthSRV;
 import org.springframework.http.ResponseEntity;
