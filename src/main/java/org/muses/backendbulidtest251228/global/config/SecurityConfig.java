@@ -5,6 +5,7 @@ import java.util.Arrays;
 import org.muses.backendbulidtest251228.domain.member.service.CustomOAuth2UserSV;
 import org.muses.backendbulidtest251228.global.jwt.JwtAuthenticationFilter;
 import org.muses.backendbulidtest251228.global.jwt.JwtTokenProvider;
+import org.muses.backendbulidtest251228.global.security.HttpCookieOAuth2AuthorRequestRepo;
 import org.muses.backendbulidtest251228.global.security.handler.OAuth2LoginSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +29,7 @@ public class SecurityConfig {
 	private final JwtTokenProvider jwtTokenProvider;
 	private final CustomOAuth2UserSV customOAuth2UserSV;
 	private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
+	private final HttpCookieOAuth2AuthorRequestRepo httpCookieOAuth2AuthorizationRequestRepository;
 
 
 	@Bean
@@ -42,25 +44,24 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 				// Swagger 허용
 				.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
-				.requestMatchers("/api/auth/**", "/oauth2/**").permitAll()
-				// TODO 프로젝트만 구현해서, 계정별 접근 권한쪽은 건들지 않았습니다. 임시로 모든 project 경로 열어두었으니 확인 부탁드립니다.
-				// 전체 접근 가능 페이지
-				.requestMatchers("/api/projects", "/api/projects/**", "/api/alarms/**", "/api/events/**", "/health", "/error").permitAll()
-				// 크리에이터 페이지
-				.requestMatchers("/api/creators/**").hasRole("CREATOR")
-				// 관리자 페이지
-				.requestMatchers("/api/admin/**").hasRole("ADMIN")
-				// 그 외 모든 요청
 				.requestMatchers("/api/auth/profile/**").authenticated()
+				.requestMatchers("/api/auth/**", "/oauth2/**", "/api/projects/**", "/api/alarms/**", "/api/events/**", "/health", "/error").permitAll()
+				.requestMatchers("/api/creators/**").hasRole("CREATOR")
+				.requestMatchers("/api/admin/**").hasRole("ADMIN")
 				.anyRequest().authenticated()
 			)
 			// JWT 필터 등록
 			.addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
 			// OAuth2 로그인 설정
 			.oauth2Login(oauth2 -> oauth2
+				.authorizationEndpoint(authorization -> authorization
+					.baseUri("/oauth2/authorization")
+					.authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository)
+				)
 				.userInfoEndpoint(userInfo -> userInfo
 					.userService(customOAuth2UserSV)
-				).successHandler(oAuth2LoginSuccessHandler)
+				)
+				.successHandler(oAuth2LoginSuccessHandler)
 			);
 
 		return http.build();
@@ -73,7 +74,8 @@ public class SecurityConfig {
 			"http://localhost:3000",
 			"http://localhost:5173",
 			"http://localhost:8080",
-			"http://localhost:9095"
+			"http://localhost:9095",
+			"http://localhost:9098"
 		));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
 		configuration.setAllowedHeaders(Arrays.asList("*"));

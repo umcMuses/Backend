@@ -38,8 +38,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
 		// TODO: 추후 프론트 리다이렉트 URL 변경
 		String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/login/success")
-			.queryParam("accessToken", accessToken)
-			.queryParam("role", member.getRole().name())
+			.fragment("accessToken=" + accessToken + "&role=" + member.getRole().name())
 			.build()
 			.encode(StandardCharsets.UTF_8)
 			.toUriString();

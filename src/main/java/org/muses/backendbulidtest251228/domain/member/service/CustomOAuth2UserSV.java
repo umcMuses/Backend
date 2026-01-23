@@ -25,6 +25,10 @@ public class CustomOAuth2UserSV extends DefaultOAuth2UserService {
 		String email = oAuth2User.getAttribute("email");
 		String name = oAuth2User.getAttribute("name");
 
+		if (email == null || email.isBlank()) {
+			throw new OAuth2AuthenticationException("이메일 정보가 없는 사용자입니다.");
+		}
+
 		// DB 저장/조회 로직 호출
 		// TODO
 
