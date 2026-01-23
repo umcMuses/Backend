@@ -12,13 +12,12 @@ import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
 import org.muses.backendbulidtest251228.domain.orderItem.entity.OrderItemENT;
-import org.muses.backendbulidtest251228.domain.orderItem.repository.OrderItemREP;
 import org.muses.backendbulidtest251228.domain.payment.application.orchestrator.PaymentOrchestrator;
 import org.muses.backendbulidtest251228.domain.payment.entity.PaymentENT;
 import org.muses.backendbulidtest251228.domain.payment.repository.PaymentREP;
 import org.muses.backendbulidtest251228.domain.temp.*;
 import org.muses.backendbulidtest251228.domain.toss.TossBillingClient;
-import org.muses.backendbulidtest251228.domain.toss.dto.BillingApproveResDTO;
+import org.muses.backendbulidtest251228.domain.toss.dto.BillingApproveResDT;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -66,13 +65,13 @@ class PaymentTest {
         createTestBillingAuth(order);
 
 
-        BillingApproveResDTO ok = new BillingApproveResDTO();
+        BillingApproveResDT ok = new BillingApproveResDT();
         ok.setStatus("DONE");
         ok.setPaymentKey("pay_" + UUID.randomUUID());
         ok.setOrderId("po_" + UUID.randomUUID());
         ok.setTotalAmount(10000L);
         ok.setApprovedAt(LocalDateTime.now().toString());
-        ok.setFailure(new BillingApproveResDTO.Failure());
+        ok.setFailure(new BillingApproveResDT.Failure());
 
         given(tossBillingClient.approveWithBillingKey(
                 any(), // BillingAuthENT

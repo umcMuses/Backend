@@ -3,7 +3,7 @@ package org.muses.backendbulidtest251228.domain.orderItem.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
-import org.muses.backendbulidtest251228.domain.temp.Project;
+import org.muses.backendbulidtest251228.domain.project.entity.ProjectENT;
 
 import java.math.BigDecimal;
 
@@ -27,7 +27,7 @@ public class OrderItemENT {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
-    private Project project;
+    private ProjectENT project;
 
     @Column(name = "reward_id", nullable = false)
     private Long rewardId;

@@ -2,9 +2,9 @@ package org.muses.backendbulidtest251228.domain.order.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.muses.backendbulidtest251228.common.ApiResponse;
-import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateReqDTO;
-import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateResDTO;
+import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
+import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateReqDT;
+import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateResDT;
 import org.muses.backendbulidtest251228.domain.order.service.OrderSRV;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -28,12 +28,12 @@ public class OrderCTL {
 
     // 결제 버튼 누르면: customerKey + success/fail 내려주기
     @GetMapping("/prepare")
-    public ResponseEntity<ApiResponse<OrderCreateResDTO>> createOrder(@Valid @RequestBody OrderCreateReqDTO req) {
+    public ResponseEntity<ApiResponse<OrderCreateResDT>> createOrder(@Valid @RequestBody OrderCreateReqDT req) {
 
         Long userId = 7L; // 임시 스프링 시큐리티 도입시 반영 필요
 
 
-        OrderCreateResDTO resDTO = orderSRV.prepare(successUrl, failUrl, userId, req);
+        OrderCreateResDT resDTO = orderSRV.prepare(successUrl, failUrl, userId, req);
 
         return ResponseEntity.ok(ApiResponse.success(resDTO));
 

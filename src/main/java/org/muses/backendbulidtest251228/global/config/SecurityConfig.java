@@ -43,8 +43,12 @@ public class SecurityConfig {
 			// JWT 사용 -> 세션 사용 X
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
-				// 전체 접근 가능 페이지
-				.requestMatchers("/api/auth/**", "/api/projects", "/api/events/**", "/health", "/error").permitAll()
+				// TODO check, swagger때문에 임시로 경로 열어두었습니다. 확인 부탁드립니다.
+					// Swagger 허용
+				.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
+				// TODO 프로젝트만 구현해서, 계정별 접근 권한쪽은 건들지 않았습니다. 임시로 모든 project 경로 열어두었으니 확인 부탁드립니다.
+					// 전체 접근 가능 페이지
+				.requestMatchers("/api/auth/**", "/api/projects", "/api/projects/**", "/api/alarms/**", "/api/events/**", "/health", "/error").permitAll()
 				// 크리에이터 페이지
 				.requestMatchers("/api/creators/**").hasRole("CREATOR")
 				// 관리자 페이지

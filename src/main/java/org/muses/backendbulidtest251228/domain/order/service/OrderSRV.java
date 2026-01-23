@@ -4,18 +4,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.muses.backendbulidtest251228.domain.billingAuth.entity.BillingAuthENT;
 import org.muses.backendbulidtest251228.domain.billingAuth.repository.BillingAuthREP;
-import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateReqDTO;
-import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateResDTO;
+import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateReqDT;
+import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateResDT;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
-import org.muses.backendbulidtest251228.domain.order.exception.OrderException;
-import org.muses.backendbulidtest251228.domain.order.exception.code.OrderErrorCode;
+import org.muses.backendbulidtest251228.domain.order.exception.OrderErrorCode;
+import org.muses.backendbulidtest251228.global.businessError.BusinessException;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
 import org.muses.backendbulidtest251228.domain.orderItem.entity.OrderItemENT;
-import org.muses.backendbulidtest251228.domain.temp.Member;
-import org.muses.backendbulidtest251228.domain.temp.MemberREP;
-import org.muses.backendbulidtest251228.domain.temp.Project;
-import org.muses.backendbulidtest251228.domain.temp.ProjectREP;
+import org.muses.backendbulidtest251228.domain.member.entity.Member;
+import org.muses.backendbulidtest251228.domain.member.repository.MemberRepo;
+import org.muses.backendbulidtest251228.domain.project.entity.ProjectENT;
+import org.muses.backendbulidtest251228.domain.project.repository.ProjectRepo;
 import org.muses.backendbulidtest251228.domain.toss.TossBillingClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,24 +31,24 @@ import java.util.UUID;
 public class OrderSRV {
 
     private final OrderREP orderREP;
-    private final MemberREP memberREP;
-    private final ProjectREP projectREP;
+    private final MemberRepo memberRepo;
+    private final ProjectRepo projectRepo;
     private final BillingAuthREP billingAuthREP;
 
     private final TossBillingClient tossBillingClient;
 
 
     @Transactional
-    public OrderCreateResDTO prepare(String baseSuccessUrl, String baseFailUrl,Long userId, OrderCreateReqDTO dto) {
+    public OrderCreateResDT prepare(String baseSuccessUrl, String baseFailUrl, Long userId, OrderCreateReqDT dto) {
 
         log.info("[Order-Prepare] 주문 생성 시작 - UserId: {}, ProjectId: {}, RewardId: {}", userId, dto.getProjectId(), dto.getRewardId());
 
 
         //예외 처리 방식 추후 변경
-        Member member = memberREP.findById(userId)
+        Member member = memberRepo.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("member not found"));
 
-        Project project = projectREP.findById(dto.getProjectId())
+        ProjectENT project = projectRepo.findById(dto.getProjectId())
                 .orElseThrow(() -> new IllegalArgumentException("project not found"));
 
 
@@ -87,7 +87,7 @@ public class OrderSRV {
                 saved.getId(), customerKey, saved.getTotalAmount());
 
 
-        return OrderCreateResDTO.builder()
+        return OrderCreateResDT.builder()
                 .orderId(saved.getId())
                 .customerKey(customerKey)
                 .successUrl(baseSuccessUrl)
@@ -106,7 +106,7 @@ public class OrderSRV {
                 .orElseThrow(() -> new IllegalArgumentException("order not found. orderId=" + orderId));
 
         OrderENT orderENT = orderREP.findById(orderId)
-                .orElseThrow(() -> new OrderException(OrderErrorCode.INVALID));
+                .orElseThrow(() -> new BusinessException(OrderErrorCode.INVALID));
 
 
 

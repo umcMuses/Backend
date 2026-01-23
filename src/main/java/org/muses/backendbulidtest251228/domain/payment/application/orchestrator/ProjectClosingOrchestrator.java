@@ -7,9 +7,9 @@ import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
 import org.muses.backendbulidtest251228.domain.payment.application.service.OrderTxSRV;
 import org.muses.backendbulidtest251228.domain.payment.application.service.ProjectTxSRV;
-import org.muses.backendbulidtest251228.domain.temp.FundingStatus;
-import org.muses.backendbulidtest251228.domain.temp.Project;
-import org.muses.backendbulidtest251228.domain.temp.ProjectREP;
+import org.muses.backendbulidtest251228.domain.project.enums.FundingStatus;
+import org.muses.backendbulidtest251228.domain.project.entity.ProjectENT;
+import org.muses.backendbulidtest251228.domain.project.repository.ProjectRepo;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProjectClosingOrchestrator {
 
-    private final ProjectREP projectREP;
+    private final ProjectRepo projectRepo;
     private final OrderREP orderREP;
 
     private final ProjectTxSRV projectTx;
@@ -37,11 +37,11 @@ public class ProjectClosingOrchestrator {
         Pageable pageable = PageRequest.of(0, limit);
 
         //마감된 프로젝트 찾기
-        List<Project> targets = projectREP.findExpiredActiveProjects(now, pageable);
+        List<ProjectENT> targets = projectRepo.findExpiredActiveProjects(now, pageable);
         log.info("[CLOSE] targets={}", targets.size());
 
 
-        for (Project p : targets) {
+        for (ProjectENT p : targets) {
             try {
                 processProject(p.getId());
             } catch (Exception e) {
@@ -58,7 +58,7 @@ public class ProjectClosingOrchestrator {
 
 
         // 1) 프로젝트 선점 + 조회
-        Project project = projectTx.tryAcquireClosingAndGet(projectId);
+        ProjectENT project = projectTx.tryAcquireClosingAndGet(projectId);
         if (project == null) {
             log.info("[CLOSE] skip acquire | projectId={}", projectId);
             return;

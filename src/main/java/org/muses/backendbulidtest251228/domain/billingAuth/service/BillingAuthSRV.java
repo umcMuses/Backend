@@ -9,7 +9,7 @@ import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
 import org.muses.backendbulidtest251228.domain.toss.TossBillingClient;
-import org.muses.backendbulidtest251228.domain.toss.dto.BillingIssueResDTO;
+import org.muses.backendbulidtest251228.domain.toss.dto.BillingIssueResDT;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,7 +51,7 @@ public class BillingAuthSRV{
 
 
 
-        BillingIssueResDTO issued =
+        BillingIssueResDT issued =
                 tossBillingClient.issueBillingKey(req.getAuthKey(), req.getCustomerKey());
 
         BillingAuthENT billingAuth = BillingAuthENT.active(
