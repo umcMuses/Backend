@@ -8,6 +8,10 @@ import org.muses.backendbulidtest251228.domain.billingAuth.entity.BillingAuthENT
 import org.muses.backendbulidtest251228.domain.billingAuth.enums.BillingAuthStatus;
 import org.muses.backendbulidtest251228.domain.billingAuth.enums.PgProvider;
 import org.muses.backendbulidtest251228.domain.billingAuth.repository.BillingAuthREP;
+import org.muses.backendbulidtest251228.domain.member.entity.Member;
+import org.muses.backendbulidtest251228.domain.member.enums.Provider;
+import org.muses.backendbulidtest251228.domain.member.enums.Role;
+import org.muses.backendbulidtest251228.domain.member.repository.MemberRepo;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
@@ -15,7 +19,14 @@ import org.muses.backendbulidtest251228.domain.orderItem.entity.OrderItemENT;
 import org.muses.backendbulidtest251228.domain.payment.application.orchestrator.PaymentOrchestrator;
 import org.muses.backendbulidtest251228.domain.payment.entity.PaymentENT;
 import org.muses.backendbulidtest251228.domain.payment.repository.PaymentREP;
-import org.muses.backendbulidtest251228.domain.temp.*;
+import org.muses.backendbulidtest251228.domain.project.entity.ProjectENT;
+import org.muses.backendbulidtest251228.domain.project.entity.RewardENT;
+import org.muses.backendbulidtest251228.domain.project.enums.AgeLimit;
+import org.muses.backendbulidtest251228.domain.project.enums.FundingStatus;
+import org.muses.backendbulidtest251228.domain.project.enums.Region;
+import org.muses.backendbulidtest251228.domain.project.enums.RewardType;
+import org.muses.backendbulidtest251228.domain.project.repository.ProjectRepo;
+import org.muses.backendbulidtest251228.domain.project.repository.RewardRepo;
 import org.muses.backendbulidtest251228.domain.toss.TossBillingClient;
 import org.muses.backendbulidtest251228.domain.toss.dto.BillingApproveResDT;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,12 +57,15 @@ class PaymentTest {
     @Autowired OrderREP orderREP;
     @Autowired PaymentREP paymentREP;
     @Autowired BillingAuthREP billingAuthREP;
-    @Autowired ProjectREP projectREP;
-    @Autowired MemberREP memberREP;
+    @Autowired
+    ProjectRepo projectREP;
+    @Autowired
+    MemberRepo memberREP;
     @Autowired EntityManager em;
 
 
-    @Autowired RewardRepository rewardRepository;
+    @Autowired
+    RewardRepo rewardRepository;
 
 
     @MockitoBean
@@ -132,22 +146,16 @@ class PaymentTest {
     private OrderENT createTestOrder(OrderStatus status) {
         LocalDateTime now = LocalDateTime.now();
 
-        Reward reward = rewardRepository.save(
-                Reward.builder()
-                        .title("얼리버드 티켓")
-                        .content("공연 20% 할인권 포함")
-                        .price(new BigDecimal("10000"))
-                        .build()
-        );
 
-        Project project = projectREP.save(
-                Project.builder()
+
+        ProjectENT project = projectREP.save(
+                ProjectENT.builder()
                         .userId(1L)
                         .status("DRAFT")
                         .lastSavedStep(1)
                         .title("뮤지컬 <봄의 노래>")
                         .description("청춘을 노래하는 소규모 뮤지컬 공연")
-                        .ageLimit("ALL")
+                        .ageLimit(AgeLimit.ALL)
                         .region(Region.SEOUL)
                         .targetAmount(new BigDecimal("10000000"))
                         .deadline(LocalDateTime.of(2026, 3, 31, 23, 59))
@@ -160,17 +168,29 @@ class PaymentTest {
                         .build()
         );
 
-        Member member = memberREP.save(
-                Member.builder()
-                        .email("test@muses.com")
-                        .providerId("kakao_123456")
-                        .ticketCount(0)
-                        .supportCount(0)
-                        .supportLevel(1)
-                        .createdAt(now)
-                        .updatedAt(now)
+        RewardENT reward = rewardRepository.save(
+                RewardENT.builder()
+                        .project(project)
+                        .rewardName("얼리버드 티켓")
+                        .description("공연 20% 할인권 포함")
+                        .price(new BigDecimal("10000"))
+                        .type(RewardType.NONE)
                         .build()
         );
+
+        Member member = memberREP.save(
+                Member.builder()
+                        .provider(Provider.LOCAL)
+                        .role(Role.MAKER)
+                        .name("테스트유저")
+                        .email("test_" + UUID.randomUUID() + "@muses.com")
+                        .providerId("local_" + UUID.randomUUID())
+                        .passwd("test-password")
+                        .phoneNumber("01012345678")
+                        .nickName("tester_" + UUID.randomUUID())
+                        .build()
+        );
+
 
 
         OrderENT order = OrderENT.builder()
