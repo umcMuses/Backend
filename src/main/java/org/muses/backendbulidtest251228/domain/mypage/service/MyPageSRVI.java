@@ -14,17 +14,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import jakarta.servlet.http.HttpServletRequest;
 
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.Map;
-
 
 @Service
 @RequiredArgsConstructor
@@ -46,7 +41,7 @@ public class MyPageSRVI implements MyPageSRV {
 
         // 닉네임 중복 체크 (본인 닉네임이면 통과)
         if (request.getNickName() != null
-                && !m.getNickName().equals(request.getNickName())
+                && (m.getNickName() == null || !m.getNickName().equals(request.getNickName()))
                 && memberREP.existsByNickName(request.getNickName())) {
             throw new BusinessException(ErrorCode.DUPLICATE, "이미 사용 중인 닉네임입니다.",
                     Map.of("nickName", request.getNickName()));
@@ -103,34 +98,16 @@ public class MyPageSRVI implements MyPageSRV {
     }
 
     private Member getCurrentMember() {
-        Long memberId = resolveCurrentMemberId();
-        return memberREP.findById(memberId)
+        String email = resolveCurrentEmail();
+        return memberREP.findByEmail(email)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.NOT_FOUND,
                         "회원 정보를 찾을 수 없습니다.",
-                        Map.of("memberId", memberId)
+                        Map.of("email", email)
                 ));
     }
 
-    private Long resolveCurrentMemberId() {
-
-        ServletRequestAttributes attrs =
-                (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attrs != null) {
-            HttpServletRequest req = attrs.getRequest();
-            String testId = req.getHeader("X-TEST-MEMBER-ID");
-            if (testId != null && !testId.isBlank()) {
-                try {
-                    return Long.parseLong(testId.trim());
-                } catch (NumberFormatException e) {
-                    throw new BusinessException(
-                            ErrorCode.BAD_REQUEST,
-                            "X-TEST-MEMBER-ID는 숫자여야 합니다.",
-                            Map.of("header", "X-TEST-MEMBER-ID", "value", testId)
-                    );
-                }
-            }
-        }
+    private String resolveCurrentEmail() {
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || auth instanceof AnonymousAuthenticationToken) {
@@ -142,32 +119,27 @@ public class MyPageSRVI implements MyPageSRV {
             throw new BusinessException(ErrorCode.AUTH_REQUIRED);
         }
 
-        if (principal instanceof Long l) return l;
-        if (principal instanceof Integer i) return i.longValue();
+        // 가장 일반적인 케이스: UserDetails.getUsername() == email
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails ud) {
+            String email = ud.getUsername();
+            if (email == null || email.isBlank()) throw new BusinessException(ErrorCode.AUTH_INVALID);
+            return email;
+        }
 
-        Long id = tryInvokeLongGetter(principal, "getId");
-        if (id != null) return id;
+        // 일부 설정에서는 principal이 String(email)로 들어올 수 있음
+        if (principal instanceof String s) {
+            if (s.isBlank() || "anonymousUser".equalsIgnoreCase(s)) {
+                throw new BusinessException(ErrorCode.AUTH_REQUIRED);
+            }
+            return s;
+        }
 
-        id = tryInvokeLongGetter(principal, "getMemberId");
-        if (id != null) return id;
-
+        // 그 외 타입이면 지금 프로젝트 계약(AuthCTL)과 맞지 않으므로 에러
         throw new BusinessException(
                 ErrorCode.AUTH_INVALID,
-                "principal에서 memberId를 찾을 수 없습니다.",
+                "principal에서 email을 찾을 수 없습니다.",
                 Map.of("principalClass", principal.getClass().getName())
         );
-    }
-
-    private Long tryInvokeLongGetter(Object target, String methodName) {
-        try {
-            Method m = target.getClass().getMethod(methodName);
-            Object v = m.invoke(target);
-            if (v instanceof Long l) return l;
-            if (v instanceof Integer i) return i.longValue();
-            return null;
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     private String saveLocal(MultipartFile file) {
