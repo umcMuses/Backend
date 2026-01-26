@@ -26,7 +26,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.stream.Collectors;
+// import java.util.stream.Collectors;
 import java.math.RoundingMode;
 
 @Service
@@ -66,7 +66,6 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
                     if (p.getTargetAmount() != null && achieveRate != null) {
                         raisedAmount = p.getTargetAmount()
                                 .multiply(BigDecimal.valueOf(achieveRate))
-                                // divide 경고 제거 (원하면 scale 0/2 조절)
                                 .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);
                     }
 
@@ -94,7 +93,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
         ProjectENT project = projectRepo.findById(projectId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "프로젝트를 찾을 수 없습니다.", Map.of("projectId", projectId)));
 
-        // 내 프로젝트 검증 (레포에 findByIdAndUserId 없어도 됨)
+        // 내 프로젝트 검증
         if (!Objects.equals(project.getUserId(), me.getId())) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "내 프로젝트만 조회할 수 있습니다.", Map.of("projectId", projectId));
         }
@@ -131,16 +130,14 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
 
         // description 업데이트
         if (request.getDescription() != null) {
-            // (추천) 엔티티에 updateDescription 한 줄 추가하면 제일 깔끔
             // project.updateDescription(request.getDescription());
 
-            // (엔티티 건드리기 싫으면) 리플렉션으로 필드 세팅
+            // 리플렉션으로 필드 세팅
             setFieldIfExists(project, "description", request.getDescription());
         }
 
         // tags 업데이트
         if (request.getTags() != null) {
-            // 레포 실제 메서드명에 맞춰야 함: deleteByProjectId(...) 형태가 보통임
             projectTagRepo.deleteByProjectId(projectId);
 
             List<ProjectTagENT> newTags = request.getTags().stream()
@@ -155,7 +152,6 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
             projectTagRepo.saveAll(newTags);
         }
 
-        // project는 JPA 영속 상태면 save 없어도 되긴 하지만, 해도 문제 없음
         projectRepo.save(project);
 
         return getProjectSettings(userDetails, projectId);
@@ -172,24 +168,19 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
             throw new BusinessException(ErrorCode.FORBIDDEN, "내 프로젝트만 조회할 수 있습니다.", Map.of("projectId", projectId));
         }
 
-        // ⚠️ 이 메서드가 OrderREP에 없으면 레포에 JPQL로 추가해야 함
+        // 이 메서드가 OrderREP에 없으면 레포에 JPQL로 추가
         List<OrderENT> orders = orderREP.findPaidOrdersWithItemsByProjectId(projectId);
 
         List<CreatorCenterProjectDT.MakerRow> rows = new ArrayList<>();
 
         for (OrderENT o : orders) {
-            // 여기서 memberId를 어떻게 갖고 있는지에 따라 갈림:
-            // 1) o.getMember().getId() 구조면 그걸로 바꾸고
-            // 2) o에 memberId 컬럼이 있으면 getMemberId()
-            Long memberId = extractLong(o, "getMemberId");
+            Member maker = o.getMember();
+            Long memberId = (maker != null) ? maker.getId() : null;
 
-            Member maker = (memberId == null) ? null : memberRepo.findById(memberId).orElse(null);
-
-            String nickname = extractString(maker, "getNickname");
-            String name = extractString(maker, "getName");
-            String phone = extractString(maker, "getPhone");
-            if (phone == null) phone = extractString(maker, "getPhoneNumber");
-            String email = extractString(maker, "getEmail");
+            String nickname = (maker != null) ? maker.getNickName() : null;
+            String name     = (maker != null) ? maker.getName() : null;
+            String phone    = (maker != null) ? maker.getPhoneNumber() : null;
+            String email    = (maker != null) ? maker.getEmail() : null;
 
             List<OrderItemENT> items = (o.getOrderItems() == null) ? List.of() : o.getOrderItems();
 
@@ -217,7 +208,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
                 .build();
     }
 
-    // ===== 내부 =====
+    // 내부
 
     private Member resolveMember(UserDetails userDetails) {
         if (userDetails == null || userDetails.getUsername() == null || userDetails.getUsername().isBlank()) {

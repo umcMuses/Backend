@@ -9,7 +9,6 @@ import java.util.List;
 
 public class CreatorCenterProjectDT {
 
-    // 8번: 내 프로젝트 리스트
     @Getter
     @Builder
     @AllArgsConstructor
@@ -18,10 +17,10 @@ public class CreatorCenterProjectDT {
         private Long projectId;
         private String title;
         private FundingStatus fundingStatus; // 진행중/완료 등 뱃지
-        private Integer dDay;                // D-3 같은 것
-        private Integer achieveRate;         // 86%, 124% 같은 것
-        private BigDecimal raisedAmount;     // 오른쪽 금액(있으면)
-        private List<String> tags;           // 설정 화면에도 쓸 수 있어서 같이 내려도 됨
+        private Integer dDay;                // D-3
+        private Integer achieveRate;         // 86%, 124%
+        private BigDecimal raisedAmount;     // 오른쪽 금액
+        private List<String> tags;           // 설정 화면
     }
 
     @Getter
@@ -32,7 +31,7 @@ public class CreatorCenterProjectDT {
         private List<MyProjectItem> items;
     }
 
-    // 6~7번: 프로젝트 설정(조회/수정 결과)
+    // 프로젝트 설정(조회/수정 결과)
     @Getter
     @Builder
     @AllArgsConstructor
@@ -46,7 +45,7 @@ public class CreatorCenterProjectDT {
         private LocalDateTime deadline;    // 수정불가 항목 표시용
     }
 
-    // 4~5번: 메이커 명단
+    // 메이커 명단
     @Getter
     @Builder
     @AllArgsConstructor
