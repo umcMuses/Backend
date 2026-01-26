@@ -107,4 +107,15 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
     """)
     Optional<OrderENT> findMyOrderDetailForMe(@Param("memberId") Long memberId, @Param("orderId") Long orderId);
 
+    // 프로젝트의 결제된 주문 + 아이템까지 한 번에
+    @Query("""
+        select distinct o
+        from OrderENT o
+        left join fetch o.orderItems oi
+        where o.project.id = :projectId
+          and o.status = 'PAID'
+        order by o.createdAt desc
+    """)
+    List<OrderENT> findPaidOrdersWithItemsByProjectId(@Param("projectId")Long projectId);
+
 }
