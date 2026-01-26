@@ -11,6 +11,7 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 public interface OrderREP extends JpaRepository<OrderENT, Long> {
 
@@ -118,4 +119,27 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
     """)
     List<OrderENT> findPaidOrdersWithItemsByProjectId(@Param("projectId")Long projectId);
 
+    @Query("""
+        SELECT COALESCE(SUM(o.totalAmount), 0)
+        FROM OrderENT o
+        WHERE o.project.id = :projectId
+        AND o.status = 'PAID'
+    """)
+        BigDecimal sumPaidAmountByProject(@Param("projectId") Long projectId);
+
+    @Query("""
+        SELECT COUNT(DISTINCT o.member.id)
+        FROM OrderENT o
+        WHERE o.project.id = :projectId
+        AND o.status = 'PAID'
+    """)
+        long countDistinctPaidMembersByProject(@Param("projectId") Long projectId);
+
+    @Query("""
+    select distinct o.member.id
+    from OrderENT o
+    where o.project.id = :projectId
+      and o.status = org.muses.backendbulidtest251228.domain.order.enums.OrderStatus.PAID
+""")
+    List<Long> findDistinctPaidMemberIdsByProject(@Param("projectId") Long projectId);
 }

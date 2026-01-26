@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 public class CreatorCenterProjectCTL {
 
     private final CreatorCenterProjectSRV creatorCenterProjectSRV;
+    private final org.muses.backendbulidtest251228.domain.mypage.service.CreatorCenterAnalyticsSRV creatorCenterAnalyticsSRV;
 
     @Operation(summary = "내 프로젝트 목록 조회", description = "로그인한 크리에이터가 생성한 프로젝트 목록을 조회")
     @GetMapping("/me/projects")
@@ -55,4 +56,22 @@ public class CreatorCenterProjectCTL {
     ) {
         return ApiResponse.success(creatorCenterProjectSRV.getProjectMakers(userDetails, projectId));
     }
+
+    @Operation(summary = "크리에이터 요약 정보", description = "총 후원금, 진행중 프로젝트 수")
+    @GetMapping("/me/summary")
+    public ApiResponse<org.muses.backendbulidtest251228.domain.mypage.dto.CreatorSummaryResDT> getMySummary(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        return ApiResponse.success(creatorCenterAnalyticsSRV.getMySummary(userDetails));
+    }
+
+    @Operation(summary = "대시보드", description = "프로젝트 대시보드 통계")
+    @GetMapping("/creator-center/projects/{projectId}/dashboard")
+    public ApiResponse<org.muses.backendbulidtest251228.domain.mypage.dto.CreatorDashboardResDT> getDashboard(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long projectId
+    ) {
+        return ApiResponse.success(creatorCenterAnalyticsSRV.getProjectDashboard(userDetails, projectId));
+    }
+
 }
