@@ -8,6 +8,10 @@ import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+
+@Tag(name = "크리에이터 센터 - 프로젝트", description = "크리에이터가 자신의 프로젝트를 조회/수정하는 API")
 
 @RestController
 @RequiredArgsConstructor
@@ -16,7 +20,7 @@ public class CreatorCenterProjectCTL {
 
     private final CreatorCenterProjectSRV creatorCenterProjectSRV;
 
-    // 내 프로젝트 리스트
+    @Operation(summary = "내 프로젝트 목록 조회", description = "로그인한 크리에이터가 생성한 프로젝트 목록을 조회")
     @GetMapping("/me/projects")
     public ApiResponse<MyProjectListResponse> getMyProjects(
             @AuthenticationPrincipal UserDetails userDetails
@@ -24,7 +28,7 @@ public class CreatorCenterProjectCTL {
         return ApiResponse.success(creatorCenterProjectSRV.getMyProjects(userDetails));
     }
 
-    //  프로젝트 설정 조회
+    @Operation(summary = "내 프로젝트 설정 조회(수정 누르기 전)", description = "로그인한 크리에이터가 생성한 프로젝트를 설정을 조회")
     @GetMapping("/creator-center/projects/{projectId}/setting")
     public ApiResponse<ProjectSettingsResponse> getProjectSettings(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -33,7 +37,7 @@ public class CreatorCenterProjectCTL {
         return ApiResponse.success(creatorCenterProjectSRV.getProjectSettings(userDetails, projectId));
     }
 
-    // 프로젝트 정보 수정 PATCH
+    @Operation(summary = "내 프로젝트 설정 수정", description = "로그인한 크리에이터가 생성한 프로젝트를 설정을 수정")
     @PatchMapping("/creator-center/projects/{projectId}/details")
     public ApiResponse<ProjectSettingsResponse> updateProjectSettings(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -43,7 +47,7 @@ public class CreatorCenterProjectCTL {
         return ApiResponse.success(creatorCenterProjectSRV.updateProjectSettings(userDetails, projectId, request));
     }
 
-    // 메이커 명단
+    @Operation(summary = "내 프로젝트 메이커 명단 조회", description = "로그인한 크리에이터가 내 프로젝트의 메이커 명단을 조회")
     @GetMapping("/creator-center/projects/{projectId}/makers")
     public ApiResponse<MakerListResponse> getProjectMakers(
             @AuthenticationPrincipal UserDetails userDetails,
