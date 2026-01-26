@@ -49,7 +49,7 @@ public class CustomOAuth2UserSV extends DefaultOAuth2UserService {
 				}
 			}
 		}
-		log.info("Social Login Info - Provider: {}, Email: {}, Name: {}", registrationId, email, name);
+		log.debug("Social Login Info - Provider: {}, Email: {}, Name: {}", registrationId, email, name);
 
 		if (email == null || email.isBlank()) {
 			throw new OAuth2AuthenticationException("소셜 로그인 이메일 정보가 없습니다.");
