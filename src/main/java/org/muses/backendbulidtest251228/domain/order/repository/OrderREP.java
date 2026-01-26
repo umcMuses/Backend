@@ -108,7 +108,6 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
     Optional<OrderENT> findMyOrderDetailForMe(@Param("memberId") Long memberId, @Param("orderId") Long orderId);
 
     // 프로젝트의 결제된 주문 + 아이템까지 한 번에
-    // OrderENT 필드명이 다르면 project.id / orderItems 이름만 맞춰주면 됨.
     @Query("""
         select distinct o
         from OrderENT o
@@ -117,6 +116,6 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
           and o.status = 'PAID'
         order by o.createdAt desc
     """)
-    List<OrderENT> findPaidOrdersWithItemsByProjectId(Long projectId);
+    List<OrderENT> findPaidOrdersWithItemsByProjectId(@Param("projectId")Long projectId);
 
 }
