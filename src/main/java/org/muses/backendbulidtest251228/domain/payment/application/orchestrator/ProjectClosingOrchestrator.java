@@ -16,12 +16,15 @@ import org.muses.backendbulidtest251228.domain.project.enums.RewardType;
 import org.muses.backendbulidtest251228.domain.project.repository.ProjectRepo;
 import org.muses.backendbulidtest251228.domain.project.repository.RewardRepo;
 import org.muses.backendbulidtest251228.domain.ticket.service.TicketIssueSRV;
+import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
+import org.muses.backendbulidtest251228.global.businessError.BusinessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -99,22 +102,28 @@ public class ProjectClosingOrchestrator {
         List<OrderENT> reserved = orderREP.findByProjectIdAndStatus(projectId, OrderStatus.RESERVED);
         for (OrderENT order : reserved) {
             try {
-                paymentOrchestrator.processOrderPayment(order.getId());
+                boolean  success = paymentOrchestrator.processOrderPayment(order.getId());
 
-                for (OrderItemENT item : order.getOrderItems()) {
-                    Long rewardId = item.getRewardId();
+                if(success){
+                    for (OrderItemENT item : order.getOrderItems()) {
+                        Long rewardId = item.getRewardId();
 
-                    RewardENT reward = rewardRepo.findById(rewardId)
-                            .orElseThrow(() ->
-                                    new IllegalArgumentException("해당 리워드를 찾을 수 없습니다. id=" + rewardId)
-                            );
+                        RewardENT reward = rewardRepo.findById(rewardId)
+                                .orElseThrow(() -> new BusinessException(
+                                        ErrorCode.BAD_REQUEST,
+                                        "해당 리워드를 찾을 수 없습니다.",
+                                        Map.of("rewardId", rewardId, "orderId", order.getId(), "projectId", projectId)
+                                ));
 
-                    if (reward.getType() == RewardType.NONE) {
-                        continue;
+                        if (reward.getType() == RewardType.NONE) {
+                            continue;
+                        }
+
+                        ticketIssueSRV.issueIfAbsent(item);
                     }
-
-                    ticketIssueSRV.issueIfAbsent(item);
                 }
+
+
 
             } catch (Exception e) {
                 log.error("[CLOSE] payment fail | projectId={} orderId={}", projectId, order.getId(), e);

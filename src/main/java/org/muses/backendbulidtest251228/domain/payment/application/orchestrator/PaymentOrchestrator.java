@@ -16,12 +16,14 @@ import org.muses.backendbulidtest251228.domain.project.entity.RewardENT;
 import org.muses.backendbulidtest251228.domain.project.repository.RewardRepo;
 import org.muses.backendbulidtest251228.domain.toss.TossBillingClient;
 import org.muses.backendbulidtest251228.domain.toss.dto.BillingApproveResDT;
+import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
+import org.muses.backendbulidtest251228.global.businessError.BusinessException;
 import org.springframework.stereotype.Service;
 
 
 
-
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -42,22 +44,26 @@ public class PaymentOrchestrator {
     private static final int MAX_RETRY = 5;
 
 
-    public void processOrderPayment(Long orderId) {
+    public boolean processOrderPayment(Long orderId) {
         // 1) 주문 선점
         // row = 0 이면 즉시 종료, 이미 다른 프로세스가 잡음
         if (!orderTx.tryAcquirePaying(orderId)) {
             log.info("[PAY] skip acquire | orderId={}", orderId);
-            return;
+            return false;
         }
 
         // 2) 주문
-        OrderENT order = orderREP.findByIdWithItems(orderId).orElseThrow();
-
+        OrderENT order = orderREP.findByIdWithItems(orderId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.NOT_FOUND,
+                        "주문을 찾을 수 없습니다.",
+                        Map.of("orderId", orderId)
+                ));
 
 
         if (order.getStatus() != OrderStatus.PAYING) {
             log.info("[PAY] status changed | orderId={} status={}", orderId, order.getStatus());
-            return;
+            return false;
         }
 
 
@@ -79,18 +85,12 @@ public class PaymentOrchestrator {
 
         if (payment.getStatus() == PaymentStatus.SUCCESS) {
             orderTx.markPaidIfPaying(orderId);
-            return;
+            return false;
         }
 
         paymentTx.markRequested(payment.getId());
 
 
-        /*BillingAuthENT billingAuth = billingAuthREP.findByOrder(order).orElseThrow();
-
-        Long rewardId = order.getOrderItems().get(0).getRewardId();
-
-        Reward reward = rewardRepository.findById(rewardId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 리워드입니다."));*/
 
 
 
@@ -103,14 +103,27 @@ public class PaymentOrchestrator {
 
         try {
             if (order.getOrderItems() == null || order.getOrderItems().isEmpty()) {
-                throw new IllegalStateException("주문 항목이 없습니다.");
+                throw new BusinessException(
+                        ErrorCode.BAD_REQUEST,
+                        "주문 항목이 없습니다.",
+                        Map.of("orderId", orderId)
+                );
             }
             Long rewardId = order.getOrderItems().get(0).getRewardId();
 
             billingAuth = billingAuthREP.findByOrder(order)
-                    .orElseThrow(() -> new IllegalStateException("BillingAuth 없음"));
+                    .orElseThrow(() -> new BusinessException(
+                            ErrorCode.BAD_REQUEST,
+                            "BillingAuth가 없습니다.",
+                            Map.of("orderId", orderId)
+                    ));
+
             reward = rewardRepo.findById(rewardId)
-                    .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 리워드입니다."));
+                    .orElseThrow(() -> new BusinessException(
+                            ErrorCode.BAD_REQUEST,
+                            "존재하지 않는 리워드입니다.",
+                            Map.of("rewardId", rewardId)
+                    ));
 
             // 4) pg 호출
             res = tossClient.approveWithBillingKey(
@@ -122,9 +135,12 @@ public class PaymentOrchestrator {
             );
         } catch (Exception e) {
 
-            ex = e;
-            e.printStackTrace();
-            log.warn("[PAY] PG call error | orderId={} msg={}", orderId, e.getMessage(), e);
+            ex = new BusinessException(
+                    ErrorCode.BAD_REQUEST,
+                    "PG 호출 중 오류가 발생했습니다.",
+                    Map.of("orderId", orderId)
+            );
+            log.warn("[PAY] PG call error | orderId={} msg={}", orderId, ex.getMessage(), ex);
         }
 
 
@@ -136,8 +152,9 @@ public class PaymentOrchestrator {
             //주문 성공
             orderTx.markPaidIfPaying(orderId);
             log.info("[PAY] success | orderId={}", orderId);
-            // TODO 티켓 발급
-            return;
+
+
+            return true;
         }
 
         String reason = (res != null && res.getFailure() != null && res.getFailure().getMessage() != null)
@@ -154,6 +171,7 @@ public class PaymentOrchestrator {
         log.warn("[PAY] failed | orderId={} nextRetryAt={} reason={}", orderId, nextRetryAt, reason);
 
 
+        return false;
 
 
     }
