@@ -2,14 +2,20 @@ package org.muses.backendbulidtest251228.domain.payment.application.orchestrator
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.muses.backendbulidtest251228.domain.checkin.service.ProjectCheckinIssueSRV;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
+import org.muses.backendbulidtest251228.domain.orderItem.entity.OrderItemENT;
 import org.muses.backendbulidtest251228.domain.payment.application.service.OrderTxSRV;
 import org.muses.backendbulidtest251228.domain.payment.application.service.ProjectTxSRV;
+import org.muses.backendbulidtest251228.domain.project.entity.RewardENT;
 import org.muses.backendbulidtest251228.domain.project.enums.FundingStatus;
 import org.muses.backendbulidtest251228.domain.project.entity.ProjectENT;
+import org.muses.backendbulidtest251228.domain.project.enums.RewardType;
 import org.muses.backendbulidtest251228.domain.project.repository.ProjectRepo;
+import org.muses.backendbulidtest251228.domain.project.repository.RewardRepo;
+import org.muses.backendbulidtest251228.domain.ticket.service.TicketIssueSRV;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,11 +30,15 @@ public class ProjectClosingOrchestrator {
 
     private final ProjectRepo projectRepo;
     private final OrderREP orderREP;
+    private final RewardRepo rewardRepo;
 
     private final ProjectTxSRV projectTx;
     private final OrderTxSRV orderTx;
 
     private final PaymentOrchestrator paymentOrchestrator;
+
+    private final ProjectCheckinIssueSRV checkinIssueSRV;
+    private final TicketIssueSRV ticketIssueSRV;
 
 
     public void processExpiredProjectsOnce(int limit){
@@ -87,11 +97,27 @@ public class ProjectClosingOrchestrator {
 
         // 프로젝트 ID 가 동일하고 아직 주문이 되지 않은 주문들 모으기
         List<OrderENT> reserved = orderREP.findByProjectIdAndStatus(projectId, OrderStatus.RESERVED);
-        for (OrderENT o : reserved) {
+        for (OrderENT order : reserved) {
             try {
-                paymentOrchestrator.processOrderPayment(o.getId());
+                paymentOrchestrator.processOrderPayment(order.getId());
+
+                for (OrderItemENT item : order.getOrderItems()) {
+                    Long rewardId = item.getRewardId();
+
+                    RewardENT reward = rewardRepo.findById(rewardId)
+                            .orElseThrow(() ->
+                                    new IllegalArgumentException("해당 리워드를 찾을 수 없습니다. id=" + rewardId)
+                            );
+
+                    if (reward.getType() == RewardType.NONE) {
+                        continue;
+                    }
+
+                    ticketIssueSRV.issueIfAbsent(item);
+                }
+
             } catch (Exception e) {
-                log.error("[CLOSE] payment fail | projectId={} orderId={}", projectId, o.getId(), e);
+                log.error("[CLOSE] payment fail | projectId={} orderId={}", projectId, order.getId(), e);
             }
         }
 
@@ -100,7 +126,15 @@ public class ProjectClosingOrchestrator {
         log.info("[CLOSE] project SUCCESS | projectId={}", projectId);
 
 
+
+
+        // QR 생성 및 QR 링크 생성
+
+        checkinIssueSRV.issueIfAbsent(project);
+
         // TODO 정산 기능 추가
+
+
     }
 
 

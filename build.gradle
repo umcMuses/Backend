@@ -63,6 +63,10 @@ dependencies {
 
     // WebFlux (WebClient for Toss API)
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // QR
+    implementation 'com.google.zxing:core:3.5.4'
+    implementation 'com.google.zxing:javase:3.5.4'
 }
 
 tasks.named('test') {
