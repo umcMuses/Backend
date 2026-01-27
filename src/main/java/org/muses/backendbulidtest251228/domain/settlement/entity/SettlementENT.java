@@ -50,5 +50,12 @@ public class SettlementENT {
         this.feeAmount = feeAmount;
         this.payoutAmount = payoutAmount;
     }
+
+    public void updateAmountAndStatus(BigDecimal totalSum, BigDecimal feeAmount, BigDecimal payoutAmount, SettlementStatus settlementStatus) {
+        this.totalAmount = totalSum;
+        this.feeAmount = feeAmount;
+        this.payoutAmount = payoutAmount;
+        this.status = settlementStatus;
+    }
 }
 

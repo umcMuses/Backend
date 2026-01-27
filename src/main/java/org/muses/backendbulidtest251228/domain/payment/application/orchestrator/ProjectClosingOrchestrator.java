@@ -232,7 +232,7 @@ public class ProjectClosingOrchestrator {
                 .ifPresentOrElse(
                         existingSettlement -> {
                             // 이미 있다면 값 업데이트 (Dirty Checking)
-                            existingSettlement.updateAmount(totalSum, feeAmount, payoutAmount);
+                            existingSettlement.updateAmountAndStatus(totalSum, feeAmount, payoutAmount, SettlementStatus.IN_PROGRESS);
                             log.info("[SETTLEMENT] Updated existing settlement for projectId={}", project.getId());
                         },
                         () -> {
@@ -240,7 +240,7 @@ public class ProjectClosingOrchestrator {
                             SettlementENT newSettlement = SettlementENT.builder()
                                     .project(project)
                                     .totalAmount(totalSum)
-                                    .status(SettlementStatus.WAITING)
+                                    .status(SettlementStatus.IN_PROGRESS)
                                     .feeAmount(feeAmount)
                                     .payoutAmount(payoutAmount)
                                     .build();
