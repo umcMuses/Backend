@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.muses.backendbulidtest251228.domain.checkin.dto.CheckinViewDTO;
 import org.muses.backendbulidtest251228.domain.member.entity.Member;
 import org.muses.backendbulidtest251228.domain.orderItem.entity.OrderItemENT;
-import org.muses.backendbulidtest251228.domain.orderItem.repository.OrderItemRepo;
+import org.muses.backendbulidtest251228.domain.orderItem.repository.OrderItemREP;
 import org.muses.backendbulidtest251228.domain.project.entity.RewardENT;
 import org.muses.backendbulidtest251228.domain.project.repository.RewardRepo;
 import org.springframework.stereotype.Service;
@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CheckinQueryService {
 
-    private final OrderItemRepo orderItemRepo;
+    private final OrderItemREP orderItemRep;
     private final RewardRepo rewardRepo;
 
 
@@ -22,7 +22,7 @@ public class CheckinQueryService {
     @Transactional(readOnly = true)
     public CheckinViewDTO loadViewByOrderItem(Long orderItemId) {
 
-        OrderItemENT item = orderItemRepo.findById(orderItemId)
+        OrderItemENT item = orderItemRep.findById(orderItemId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 주문 아이템"));
 
         Long projectId = item.getProject().getId();
