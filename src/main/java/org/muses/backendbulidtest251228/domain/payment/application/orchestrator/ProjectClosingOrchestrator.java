@@ -15,6 +15,9 @@ import org.muses.backendbulidtest251228.domain.project.entity.ProjectENT;
 import org.muses.backendbulidtest251228.domain.project.enums.RewardType;
 import org.muses.backendbulidtest251228.domain.project.repository.ProjectRepo;
 import org.muses.backendbulidtest251228.domain.project.repository.RewardRepo;
+import org.muses.backendbulidtest251228.domain.settlement.entity.SettlementENT;
+import org.muses.backendbulidtest251228.domain.settlement.enums.SettlementStatus;
+import org.muses.backendbulidtest251228.domain.settlement.repository.SettlementRepo;
 import org.muses.backendbulidtest251228.domain.ticket.service.TicketIssueSRV;
 import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
 import org.muses.backendbulidtest251228.global.businessError.BusinessException;
@@ -22,6 +25,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +47,7 @@ public class ProjectClosingOrchestrator {
 
     private final ProjectCheckinIssueSRV checkinIssueSRV;
     private final TicketIssueSRV ticketIssueSRV;
+    private final SettlementRepo settlementRepo;
 
 
     public void processExpiredProjectsOnce(int limit){
@@ -130,18 +136,81 @@ public class ProjectClosingOrchestrator {
             }
         }
 
+
+
         // 4) 프로젝트 SUCCESS 확정(프로젝트 성공과 개별 결제 성공은 분리 정책)
         projectTx.finalizeStatusFromClosing(projectId, FundingStatus.SUCCESS);
         log.info("[CLOSE] project SUCCESS | projectId={}", projectId);
-
-
 
 
         // QR 생성 및 QR 링크 생성
 
         checkinIssueSRV.issueIfAbsent(project);
 
+
+
+        int count = orderREP.findByProjectIdAndStatus(projectId, OrderStatus.PAY_FAILED).size();
+
+        if(count != 0) {
+            // 실패한 주문이 있는 경우
+            //하루 뒤에 다시 시도
+
+            LocalDateTime next = LocalDateTime.now().plusHours(24); // 하루 뒤
+
+
+            //예약
+            int scheduled = orderTx.scheduleRetryForFailedOrders(projectId, next);
+            log.info("[CLOSE] schedule retry for failed orders | projectId={} count={} nextRetryAt={}",
+                    projectId, scheduled, next);
+
+
+        }else{
+            // 모든 주문이 성공한 경우
+
+        }
+
         // TODO 정산 기능 추가
+
+
+
+        // 결제가 성공한 곳만
+        List<OrderENT> orderList = orderREP.findByProjectIdAndStatus(projectId, OrderStatus.PAID);
+        BigDecimal totalSum = orderList.stream()
+                .map(OrderENT::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        // 1. 수수료 및 지급액 계산 (공통)
+        BigDecimal feeAmount = totalSum.multiply(new BigDecimal("0.1"))
+                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal payoutAmount = totalSum.subtract(feeAmount);
+
+
+        // 2. 기존 데이터 존재 여부 확인 및 처리
+        settlementRepo.findByProject(project)
+                .ifPresentOrElse(
+                        existingSettlement -> {
+                            // 이미 있다면 값 업데이트 (Dirty Checking)
+                            existingSettlement.updateAmount(totalSum, feeAmount, payoutAmount);
+                            log.info("[SETTLEMENT] Updated existing settlement for projectId={}", project.getId());
+                        },
+                        () -> {
+                            // 없다면 새로 생성 후 저장
+                            SettlementENT newSettlement = SettlementENT.builder()
+                                    .project(project)
+                                    .totalAmount(totalSum)
+                                    .status(SettlementStatus.WAITING)
+                                    .feeAmount(feeAmount)
+                                    .payoutAmount(payoutAmount)
+                                    .build();
+                            settlementRepo.save(newSettlement);
+                            log.info("[SETTLEMENT] Created new settlement for projectId={}", project.getId());
+                        }
+                );
+
+
+
+
+
 
 
     }

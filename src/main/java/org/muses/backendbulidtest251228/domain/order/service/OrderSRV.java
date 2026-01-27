@@ -10,6 +10,9 @@ import org.muses.backendbulidtest251228.domain.order.dto.OrderItemReqDT;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
 import org.muses.backendbulidtest251228.domain.orderItem.repository.OrderItemREP;
+import org.muses.backendbulidtest251228.domain.settlement.entity.SettlementENT;
+import org.muses.backendbulidtest251228.domain.settlement.enums.SettlementStatus;
+import org.muses.backendbulidtest251228.domain.settlement.repository.SettlementRepo;
 import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
 import org.muses.backendbulidtest251228.global.businessError.BusinessException;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
@@ -23,7 +26,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,6 +43,7 @@ public class OrderSRV {
     private final MemberRepo memberRepo;
     private final ProjectRepo projectRepo;
     private final BillingAuthREP billingAuthREP;
+    private final SettlementRepo settlementRepo;
 
     private final TossBillingClient tossBillingClient;
 
@@ -96,11 +102,55 @@ public class OrderSRV {
 
 
 
-            //  주문 총액 반영
+        //  주문 총액 반영
         order.changeTotalAmount(totalAmount);
 
-            //  저장
-            OrderENT saved = orderREP.save(order);
+        //  저장
+        OrderENT saved = orderREP.save(order);
+
+        BigDecimal targetAmount = project.getTargetAmount();
+
+        List<OrderENT> orderList = orderREP.findByProjectIdAndStatus(dto.getProjectId(), OrderStatus.RESERVED);
+        BigDecimal totalSum = orderList.stream()
+                .map(OrderENT::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        //totalSum 이 더 크면
+        if (totalSum.compareTo(targetAmount) > 0) {
+
+
+
+            // 1. 수수료 및 지급액 계산 (공통)
+            BigDecimal feeAmount = totalSum.multiply(new BigDecimal("0.1"))
+                    .setScale(2, RoundingMode.HALF_UP);
+            BigDecimal payoutAmount = totalSum.subtract(feeAmount);
+
+
+            // 2. 기존 데이터 존재 여부 확인 및 처리
+            settlementRepo.findByProject(project)
+                    .ifPresentOrElse(
+                            existingSettlement -> {
+                                // 이미 있다면 값 업데이트 (Dirty Checking)
+                                existingSettlement.updateAmount(totalSum, feeAmount, payoutAmount);
+                                log.info("[SETTLEMENT] Updated existing settlement for projectId={}", project.getId());
+                            },
+                            () -> {
+                                // 없다면 새로 생성 후 저장
+                                SettlementENT newSettlement = SettlementENT.builder()
+                                        .project(project)
+                                        .totalAmount(totalSum)
+                                        .status(SettlementStatus.WAITING)
+                                        .feeAmount(feeAmount)
+                                        .payoutAmount(payoutAmount)
+                                        .build();
+                                settlementRepo.save(newSettlement);
+                                log.info("[SETTLEMENT] Created new settlement for projectId={}", project.getId());
+                            }
+                    );
+
+        }
+
+
 
                 return OrderCreateResDT.builder()
                         .orderId(saved.getId())
@@ -210,5 +260,36 @@ public class OrderSRV {
         billingAuth.revoke();
 
         order.changeStatus(OrderStatus.CANCELED);
+
+
+
+
+        //  정산 데이터 재계산 로직 시작
+        ProjectENT project = order.getProject();
+        BigDecimal targetAmount = project.getTargetAmount();
+
+        // 취소된 주문을 제외한 나머지 '결제 완료/예약' 상태의 총액 계산
+        // (현재 취소된 주문의 status가 CANCELED로 바뀌었으므로, 기존 조회 쿼리를 재사용하면 합계에서 빠집니다)
+        List<OrderENT> orderList = orderREP.findByProjectIdAndStatus(project.getId(), OrderStatus.RESERVED);
+        BigDecimal totalSum = orderList.stream()
+                .map(OrderENT::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        //  조건부 업데이트 또는 삭제
+        settlementRepo.findByProject(project).ifPresent(settlement -> {
+            if (totalSum.compareTo(targetAmount) < 0) {
+                // 목표 금액보다 적어지면 정산 행 삭제
+                settlementRepo.delete(settlement);
+                log.info("[SETTLEMENT] Deleted due to goal unachievement | projectId={}", project.getId());
+            } else {
+                // 여전히 목표 달성 상태라면 금액 재계산 후 업데이트
+                BigDecimal feeAmount = totalSum.multiply(new BigDecimal("0.1"))
+                        .setScale(2, RoundingMode.HALF_UP);
+                BigDecimal payoutAmount = totalSum.subtract(feeAmount);
+
+                settlement.updateAmount(totalSum, feeAmount, payoutAmount);
+                log.info("[SETTLEMENT] Updated after cancellation | projectId={}", project.getId());
+            }
+        });
     }
 }

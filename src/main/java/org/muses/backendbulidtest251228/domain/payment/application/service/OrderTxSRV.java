@@ -1,6 +1,7 @@
 package org.muses.backendbulidtest251228.domain.payment.application.service;
 
 import lombok.RequiredArgsConstructor;
+import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,4 +42,17 @@ public class OrderTxSRV {
     public boolean updatePaymentOrderId(Long orderId, String pgOrderId){
        return  orderREP.updatePaymentOrderId(orderId, pgOrderId) == 1;
     }
+
+    // 실패한 주문에 대해서 재시도 예약
+    @Transactional
+    public int scheduleRetryForFailedOrders(Long projectId, LocalDateTime nextRetryAt) {
+        return orderREP.scheduleRetryForFailedOrders(projectId, OrderStatus.PAY_FAILED, nextRetryAt);
+    }
+
+    @Transactional
+    public void stopRetryIfFailed(Long orderId) {
+        orderREP.stopRetry(orderId, OrderStatus.PAY_FAILED);
+    }
+
+
 }
