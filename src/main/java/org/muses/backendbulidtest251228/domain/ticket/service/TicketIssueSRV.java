@@ -22,6 +22,10 @@ public class TicketIssueSRV {
     @Transactional
     public void issueIfAbsent(OrderItemENT orderItem) {
 
+        if (ticketRepo.findByOrderItem(orderItem).isPresent()) {
+            return;
+        }
+
         TicketENT ticket = TicketENT.builder()
                 .orderItem(orderItem)
                 .ticketToken(tokenGenerator.generate())

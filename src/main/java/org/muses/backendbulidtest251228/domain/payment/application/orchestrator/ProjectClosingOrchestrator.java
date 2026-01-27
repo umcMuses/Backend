@@ -101,24 +101,21 @@ public class ProjectClosingOrchestrator {
             try {
                 paymentOrchestrator.processOrderPayment(order.getId());
 
-                for (OrderENT o : reserved) {
-                    for (OrderItemENT item : o.getOrderItems()) {
+                for (OrderItemENT item : order.getOrderItems()) {
+                    Long rewardId = item.getRewardId();
 
+                    RewardENT reward = rewardRepo.findById(rewardId)
+                            .orElseThrow(() ->
+                                    new IllegalArgumentException("해당 리워드를 찾을 수 없습니다. id=" + rewardId)
+                            );
 
-                        Long rewardId = item.getRewardId();
-
-                        RewardENT reward = rewardRepo.findById(rewardId)
-                                .orElseThrow(() -> new IllegalArgumentException("해당 리워드를 찾을 수 없습니다. id=" + rewardId));
-
-                        if(reward.getType() == RewardType.NONE )
-                            return;
-
-
-
-
-                        ticketIssueSRV.issueIfAbsent(item);
+                    if (reward.getType() == RewardType.NONE) {
+                        continue;
                     }
+
+                    ticketIssueSRV.issueIfAbsent(item);
                 }
+
             } catch (Exception e) {
                 log.error("[CLOSE] payment fail | projectId={} orderId={}", projectId, order.getId(), e);
             }

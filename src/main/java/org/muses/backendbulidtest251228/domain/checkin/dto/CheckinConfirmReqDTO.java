@@ -1,7 +1,7 @@
 package org.muses.backendbulidtest251228.domain.checkin.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 )
 public class CheckinConfirmReqDTO {
 
-    @NotNull
+    @NotBlank
     @Schema(
             description = "QR에서 추출한 티켓 토큰",
             example = "TT_9f3a2c8b1e"
