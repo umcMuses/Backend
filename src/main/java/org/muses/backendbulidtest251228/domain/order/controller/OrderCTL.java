@@ -47,7 +47,7 @@ public class OrderCTL {
                 """
          )
     @GetMapping("/prepare")
-    public ResponseEntity<ApiResponse<OrderCreateResDT>> createOrder(
+    public ApiResponse<OrderCreateResDT> createOrder(
             @Valid @org.springframework.web.bind.annotation.RequestBody OrderCreateReqDT req,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
@@ -61,7 +61,7 @@ public class OrderCTL {
 
         OrderCreateResDT resDTO = orderSRV.prepare(successUrl, failUrl, userId, req);
 
-        return ResponseEntity.ok(ApiResponse.success(resDTO));
+        return ApiResponse.success(resDTO);
 
     }
 
@@ -70,7 +70,7 @@ public class OrderCTL {
             description = "주문 상세의 수량을 차감하거나 전체 삭제하고, 주문 금액이 0원이 되면 주문을 취소합니다."
     )
     @DeleteMapping("/cancel")
-    public ResponseEntity<ApiResponse<?>> cancelOrder(@Parameter(description = "취소할 주문 상세 ID", example = "1")
+    public ApiResponse<?> cancelOrder(@Parameter(description = "취소할 주문 상세 ID", example = "1")
                                                           @RequestParam("orderItemId") Long orderItemId,
 
                                                       @Parameter(description = "취소할 수량", example = "1")
@@ -79,7 +79,7 @@ public class OrderCTL {
         orderSRV.cancel(orderItemId, qty);
 
 
-        return ResponseEntity.ok(ApiResponse.success("OK"));
+        return ApiResponse.success("OK");
     }
 
 }
