@@ -53,7 +53,7 @@ public class AuthSV {
 	}
 	// 소셜 로그인
 	@Transactional
-	public AuthResponseDT.TokenResponse socialLoginProcess(String email, String name, Provider provider, String providerId) {
+	public Member socialLoginProcess(String email, String name, Provider provider, String providerId) {
 
 		Member member = memberRepo.findByEmail(email).orElse(null);
 
@@ -65,11 +65,10 @@ public class AuthSV {
 				.providerId(providerId)
 				.role(Role.GUEST)
 				.build();
-			memberRepo.save(member);
+			return memberRepo.save(member);
 		}
-		// 토큰 발급
-		String accessToken = jwtTokenProvider.createToken(member.getEmail(), member.getRole().name());
-		return new AuthResponseDT.TokenResponse(accessToken, "", member.getRole(), member.getName());
+		// 기존 회원 반환
+		return member;
 	}
 
 	// 프로필 설정 (회원가입 후)
