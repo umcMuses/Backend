@@ -185,4 +185,11 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
 
     @Query("select o from OrderENT o join fetch o.orderItems where o.id in :ids")
     List<OrderENT> findAllWithItemsByIds(List<Long> ids);
+
+    @Query("""
+           select distinct o.member.id
+           from OrderENT o
+           where o.project.id = :projectId
+           """)
+    List<Long> findDistinctMemberIdsByProjectId(@Param("projectId") Long projectId);
 }

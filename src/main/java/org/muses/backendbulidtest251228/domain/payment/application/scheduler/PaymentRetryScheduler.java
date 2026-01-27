@@ -2,6 +2,7 @@ package org.muses.backendbulidtest251228.domain.payment.application.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.muses.backendbulidtest251228.domain.alarm.service.AlarmSRVI;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
@@ -41,6 +42,8 @@ public class PaymentRetryScheduler {
     private final RewardRepo rewardRepo;
     private final SettlementRepo settlementRepo;
 
+    private final AlarmSRVI alarmSRVI;
+
 
 
     //5분 마다 PAY_FAILED 라고 적힌거 재시도
@@ -60,6 +63,13 @@ public class PaymentRetryScheduler {
                 if (!success) {
                     //  재시도 1번 실패하면 종료: nextRetryAt=null 처리
                     orderTx.stopRetryIfFailed(order.getId());
+
+                    // 여기서 해당 프로젝트에 주문한 사람들에게 각각 알림을 보낸다
+                    alarmSRVI.send(
+                            order.getMember().getId(),
+                            5L, // alarm_id = 5 (펀딩 실패 템플릿)
+                            Map.of("projectName", order.getProject().getTitle())
+                    );
                 }
 
                 // 티켓 생성
@@ -75,10 +85,24 @@ public class PaymentRetryScheduler {
                                 ));
 
                         if (reward.getType() == RewardType.NONE) {
+
+                            //  4번 템플릿(펀딩 성공) - 주문자에게 적재
+                            alarmSRVI.send(
+                                    order.getMember().getId(),
+                                    4L,
+                                    Map.of("projectName", order.getProject().getTitle())
+                            );
                             continue;
                         }
 
                         ticketIssueSRV.issueIfAbsent(item);
+
+                        // 2번 템플릿(QR 발급) - 주문자에게 적재
+                        alarmSRVI.send(
+                                order.getMember().getId(),
+                                2L,
+                                Map.of("projectName", order.getProject().getTitle())
+                        );
                     }
                 }
 
@@ -122,7 +146,7 @@ public class PaymentRetryScheduler {
                                 }
                         );
 
-                // 알림 기능 추가
+
 
 
 

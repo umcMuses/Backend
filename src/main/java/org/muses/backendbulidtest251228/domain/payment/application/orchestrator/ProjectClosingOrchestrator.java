@@ -2,6 +2,7 @@ package org.muses.backendbulidtest251228.domain.payment.application.orchestrator
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.muses.backendbulidtest251228.domain.alarm.service.AlarmSRVI;
 import org.muses.backendbulidtest251228.domain.checkin.service.ProjectCheckinIssueSRV;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
@@ -49,6 +50,7 @@ public class ProjectClosingOrchestrator {
     private final TicketIssueSRV ticketIssueSRV;
     private final SettlementRepo settlementRepo;
 
+    private final AlarmSRVI alarmSRVI;
 
     public void processExpiredProjectsOnce(int limit){
         LocalDateTime now = LocalDateTime.now();
@@ -85,11 +87,24 @@ public class ProjectClosingOrchestrator {
 
 
 
+        BigDecimal targetAmount = project.getTargetAmount();
 
+        List<OrderENT> orderListBefore = orderREP.findByProjectIdAndStatus(projectId, OrderStatus.RESERVED);
+        BigDecimal totalSumBefore = orderListBefore.stream()
+                .map(OrderENT::getTotalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // 2) 성공/실패 판정
         // 실패 흐름
-        if (!project.isGoalAchieved()) {
+        //totalSum 이 더 크면
+        if (totalSumBefore.compareTo(targetAmount) < 0) {
+
+            // 목표 금액이 더 크면 즉, 실패하면
+
+            // 이 프로젝트에 주문한 사람들(중복 제거) 조회
+            List<Long> memberIds = orderREP.findDistinctMemberIdsByProjectId(projectId);
+
+
             //  주문의 상태를 RESERVED는 VOID로 무효 처리
             orderTx.voidReservedByProject(projectId);
 
@@ -97,10 +112,24 @@ public class ProjectClosingOrchestrator {
             // 프로젝트 펀딩 상태를 실패로
             projectTx.finalizeStatusFromClosing(projectId, FundingStatus.FAIL);
 
+            // 여기서 해당 프로젝트에 주문한 사람들에게 각각 알림을 보낸다
+            if (!memberIds.isEmpty()) {
+                alarmSRVI.sendToMany(
+                        memberIds,
+                        5L, // alarm_id = 5 (펀딩 실패 템플릿)
+                        Map.of("projectName", project.getTitle())
+                );
+            }
+
+
+
 
             log.info("[CLOSE] project FAILED -> orders VOID | projectId={}", projectId);
             return;
         }
+
+
+
 
         // 3) 성공 흐름: RESERVED 주문 결제
 
@@ -122,10 +151,24 @@ public class ProjectClosingOrchestrator {
                                 ));
 
                         if (reward.getType() == RewardType.NONE) {
+                            //  4번 템플릿(펀딩 성공) - 주문자에게 적재
+                            alarmSRVI.send(
+                                    order.getMember().getId(),
+                                    4L,
+                                    Map.of("projectName", order.getProject().getTitle())
+                            );
                             continue;
                         }
 
                         ticketIssueSRV.issueIfAbsent(item);
+
+                        // 2번 템플릿(QR 발급) - 주문자에게 적재
+                        alarmSRVI.send(
+                                order.getMember().getId(),
+                                2L,
+                                Map.of("projectName", order.getProject().getTitle())
+                        );
+
                     }
                 }
 
@@ -169,7 +212,6 @@ public class ProjectClosingOrchestrator {
 
         }
 
-        // TODO 정산 기능 추가
 
 
 
