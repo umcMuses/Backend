@@ -26,13 +26,20 @@ public interface ProjectLikeRepo extends JpaRepository<ProjectLikeENT, Long> {
     void deleteByMemberIdAndProjectId(Long memberId, Long projectId);
 
     // 마이페이지 내가 좋아요한 프로젝트
-    @Query("""
+    @Query(
+        value = """
         select pl
         from ProjectLikeENT pl
         join fetch pl.project p
         where pl.member.id = :memberId
         order by pl.createdAt desc
-    """)
+    """,
+        countQuery = """
+        select count(pl)
+        from ProjectLikeENT pl
+        where pl.member.id = :memberId
+        """
+    )
     Page<ProjectLikeENT> findAllByMemberIdWithProject(@Param("memberId") Long memberId, Pageable pageable);
 
 }

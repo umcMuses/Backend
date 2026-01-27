@@ -143,18 +143,18 @@ public class CreatorCenterAnalyticsSRVI implements CreatorCenterAnalyticsSRV {
     }
 
     private Map<String, Integer> calcAgeRatio(List<Member> members) {
-        int total = members.size();
-        if (total == 0) return Map.of("20s", 0, "30s", 0, "40s", 0, "50s+", 0);
 
         long s20 = members.stream().filter(m -> isAgeBetween(m, 20, 29)).count();
         long s30 = members.stream().filter(m -> isAgeBetween(m, 30, 39)).count();
         long s40 = members.stream().filter(m -> isAgeBetween(m, 40, 49)).count();
         long s50 = members.stream().filter(m -> isAgeAtLeast(m, 50)).count();
+        long known = s20 + s30 + s40 + s50;
+        if (known == 0) return Map.of("20s", 0, "30s", 0, "40s", 0, "50s+", 0);
 
-        int p20 = (int) Math.round(s20 * 100.0 / total);
-        int p30 = (int) Math.round(s30 * 100.0 / total);
-        int p40 = (int) Math.round(s40 * 100.0 / total);
-        int p50 = 100 - (p20 + p30 + p40); // 합 100 맞추기
+        int p20 = (int) Math.round(s20 * 100.0 / known);
+        int p30 = (int) Math.round(s30 * 100.0 / known);
+        int p40 = (int) Math.round(s40 * 100.0 / known);
+        int p50 = Math.max(0, 100 - (p20 + p30 + p40));
 
         return Map.of("20s", p20, "30s", p30, "40s", p40, "50s+", p50);
     }
