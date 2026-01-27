@@ -180,4 +180,35 @@ public class OrderSRV {
 
 
     }
+
+    //해당 주문을 찾아서 일단 빌링키 삭제 해달라고 toss 에게 요청
+    // 이후 빌링키 와 order 상태 변경
+    @Transactional
+    public void cancel(Long orderId){
+
+
+
+        OrderENT order = orderREP.findById(orderId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.NOT_FOUND,
+                        "주문을 찾을 수 없습니다.",
+                        Map.of("orderId", orderId)
+                ));
+
+
+
+        BillingAuthENT billingAuth = billingAuthREP.findByOrder(order)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.NOT_FOUND,
+                        "빌링 인증 정보를 찾을 수 없습니다.",
+                        Map.of("orderId", order.getId())
+                ));
+        // Toss에 빌링키 삭제 요청
+        tossBillingClient.deleteBillingKey(billingAuth.getBillingKey());
+
+
+        billingAuth.revoke();
+
+        order.changeStatus(OrderStatus.CANCELED);
+    }
 }

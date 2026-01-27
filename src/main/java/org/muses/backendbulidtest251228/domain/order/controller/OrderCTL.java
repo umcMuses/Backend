@@ -82,4 +82,19 @@ public class OrderCTL {
         return ApiResponse.success("OK");
     }
 
+
+    @Operation(
+            summary = "주문 취소 (전체 취소)",
+            description = "해당 주문 전체를 취소하고 빌링키를 삭제합니다"
+    )
+    @DeleteMapping("/cancel/all")
+    public ApiResponse<?> cancelAllOrder(@Parameter(description = "취소할 주문 ID", example = "1")
+                                      @RequestParam("orderId") Long orderId){
+
+        orderSRV.cancel(orderId);
+
+
+        return ApiResponse.success("OK");
+    }
+
 }
