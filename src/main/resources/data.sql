@@ -25,3 +25,6 @@ INSERT INTO alarm (alarm_id, alarm_context) VALUES (3, '${projectName} 프로젝
 INSERT INTO alarm (alarm_id, alarm_context) VALUES (4, '${projectName} 프로젝트 펀딩이 성공적으로 완료되었습니다.');
 INSERT INTO alarm (alarm_id, alarm_context) VALUES (5, '${projectName} 프로젝트에 ${makerName}님이 후원하셨습니다.');
 INSERT INTO alarm (alarm_id, alarm_context) VALUES (6, '${projectName} 프로젝트의 ${rewardName} 리워드를 후원하셨습니다.');
+
+-- 프로젝트 오픈 알림
+insert ignore into alarm (alarm_id, alarm_context) values (103, '프로젝트 ${projectName}가 생성되었습니다.');

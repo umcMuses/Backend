@@ -71,7 +71,7 @@ public class ProjectOpeningScheduler {
             // PURPOSE 알람 발송 (템플릿 ID: 3 = 펀딩 시작 알람)
             alarmSRV.sendToMany(
                 memberIds,
-                3L,
+                103L,
                 Map.of("projectName", project.getTitle())
             );
 
