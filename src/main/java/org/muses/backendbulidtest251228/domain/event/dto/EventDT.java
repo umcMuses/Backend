@@ -20,7 +20,7 @@ public class EventDT {
 	@AllArgsConstructor
 	@Builder
 	public static class EventRequest {
-		@Schema(description = "이벤트 카테고리", example = "NOTICE")
+		@Schema(description = "이벤트 카테고리", example = "NOTICE or COLLABORATIVE")
 		@NotNull
 		private EventCategory category;
 
