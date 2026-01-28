@@ -16,7 +16,7 @@ import java.util.List;
 public interface ProjectRepo extends JpaRepository<ProjectENT, Long> {
 
     // 사용자 ID로 프로젝트 목록 조회
-    List<ProjectENT> findByUserId(Long userId);
+    List<ProjectENT> findByMemberId(Long memberId);
 
     // 상태별 프로젝트 목록 조회
     List<ProjectENT> findByStatus(String status);
@@ -48,6 +48,9 @@ public interface ProjectRepo extends JpaRepository<ProjectENT, Long> {
     @Query("SELECT p FROM ProjectENT p WHERE p.fundingStatus = 'CLOSING' AND p.updatedAt < :threshold")
     List<ProjectENT> findStuckClosing(@Param("threshold") LocalDateTime threshold, Pageable pageable);
 
+    // 오픈 시간이 된 APPROVED 프로젝트 조회 (스케줄러용)
+    @Query("SELECT p FROM ProjectENT p WHERE p.status = 'APPROVED' AND p.opening BETWEEN :start AND :end")
+    List<ProjectENT> findByStatusApprovedAndOpeningBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
     // ==================== 랜딩 페이지 관련 메서드 ====================
 
     List<ProjectENT> findTop6ByFundingStatusOrderBySupporterCountDesc(FundingStatus fundingStatus);

@@ -48,6 +48,8 @@ public class SecurityConfig {
 				.requestMatchers("/api/auth/**", "/oauth2/**", "/api/projects/**", "/api/alarms/**", "/api/events/**", "/health", "/error").permitAll()
 				.requestMatchers("/api/creators/**").hasRole("CREATOR")
 				.requestMatchers("/api/admin/**").hasRole("ADMIN")
+				// TODO 정적 파일 (업로드된 이미지) 허용
+				.requestMatchers("/files/**").permitAll()
 				.anyRequest().authenticated()
 			)
 			// JWT 필터 등록

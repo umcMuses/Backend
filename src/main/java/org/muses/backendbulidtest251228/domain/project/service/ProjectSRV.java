@@ -35,11 +35,11 @@ public interface ProjectSRV {
 
     // 4단계: 스토리
     void saveStory(Long projectId, StoryRequestDT request);
-    String uploadImage(Long projectId, MultipartFile image);
+    List<String> uploadImages(Long projectId, List<MultipartFile> images, List<Long> deleteIds);
 
     // 5단계: 정보
     void saveInfo(Long projectId, InfoRequestDT request);
-    List<String> uploadDocuments(Long projectId, MultipartFile idCard, MultipartFile bankbook);
+    List<String> uploadDocuments(Long projectId, List<MultipartFile> documents, List<Long> deleteIds);
 
     // 프로젝트 제출
     void submitProject(Long projectId);

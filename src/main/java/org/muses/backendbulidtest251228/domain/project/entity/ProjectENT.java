@@ -5,9 +5,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
@@ -18,6 +21,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.muses.backendbulidtest251228.domain.member.entity.Member;
 import org.muses.backendbulidtest251228.domain.project.dto.request.FundingRequestDT;
 import org.muses.backendbulidtest251228.domain.project.dto.request.OutlineRequestDT;
 import org.muses.backendbulidtest251228.domain.project.enums.AgeLimit;
@@ -42,9 +46,9 @@ public class ProjectENT {
     @Column(name = "project_id")
     private Long id;
 
-    // TODO : Member 엔티티 생성 후 FK 연결 필요
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private Member member;
 
     @Column(name = "status", nullable = false, length = 50)
     private String status;

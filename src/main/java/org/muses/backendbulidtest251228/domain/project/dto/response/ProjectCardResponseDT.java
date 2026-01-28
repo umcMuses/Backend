@@ -43,4 +43,7 @@ public class ProjectCardResponseDT {
 
     @Schema(description = "펀딩 시작(오픈) 일시, 오픈 예정 프로젝트에서 사용", example = "2025-02-01T00:00:00")
     private LocalDateTime opening;
+
+    @Schema(description = "첨부파일 중 첫 번째 이미지 URL (없으면 null)")
+    private String attachmentImageUrl;
 }

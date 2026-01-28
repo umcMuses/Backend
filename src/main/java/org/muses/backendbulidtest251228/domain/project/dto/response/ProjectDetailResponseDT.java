@@ -7,6 +7,7 @@ import lombok.Getter;
 import org.muses.backendbulidtest251228.domain.project.enums.AgeLimit;
 import org.muses.backendbulidtest251228.domain.project.enums.FundingStatus;
 import org.muses.backendbulidtest251228.domain.project.enums.Region;
+import org.muses.backendbulidtest251228.domain.storage.dto.AttachmentResponseDT;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -78,6 +79,9 @@ public class ProjectDetailResponseDT {
     @Schema(description = "[4단계] 환불/취소 정책 안내", example = "공연 7일 전까지 전액 환불 가능, 이후 환불 불가")
     private String refundPolicy;
 
+    @Schema(description = "[4단계] 첨부파일 목록")
+    private List<AttachmentResponseDT> attachments;
+
     // ========== 5단계: 정보 ==========
     @Schema(description = "[5단계] 프로젝트 진행자 프로필 이미지 URL")
     private String hostProfileImg;
@@ -87,6 +91,9 @@ public class ProjectDetailResponseDT {
 
     @Schema(description = "[5단계] 프로젝트 진행자 소개", example = "보컬을 맡고 있습니다")
     private String hostBio;
+
+    @Schema(description = "[5단계] 정산 서류 목록")
+    private List<AttachmentResponseDT> documents;
 
     // ========== 통계 ==========
     @Schema(description = "[통계] 목표 금액 대비 달성률 (%), 실시간 업데이트", example = "127")
