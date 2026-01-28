@@ -37,7 +37,7 @@ public class CreatorCenterAnalyticsSRVI implements CreatorCenterAnalyticsSRV {
     public CreatorSummaryResDT getMySummary(UserDetails userDetails) {
         Member me = getMe(userDetails);
 
-        List<ProjectENT> myProjects = projectRepo.findByUserId(me.getId());
+        List<ProjectENT> myProjects = projectRepo.findByMemberId(me.getId());
 
         BigDecimal total = BigDecimal.ZERO;
         long ongoing = 0;
@@ -64,7 +64,7 @@ public class CreatorCenterAnalyticsSRVI implements CreatorCenterAnalyticsSRV {
         ProjectENT project = projectRepo.findById(projectId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
 
-        if (!Objects.equals(project.getUserId(), me.getId())) {
+        if (!Objects.equals(project.getMember().getId(), me.getId())) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
 

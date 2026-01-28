@@ -148,6 +148,7 @@ class PaymentTest {
 
 
 
+        // TODO Project테이블 자체에 저장되던 유저고유키를 외래키 등록시켰습니다. 수정 부탁드립니다
         ProjectENT project = projectREP.save(
                 ProjectENT.builder()
                         .userId(1L)

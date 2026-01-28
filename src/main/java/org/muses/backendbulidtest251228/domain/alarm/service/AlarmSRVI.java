@@ -14,6 +14,7 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class AlarmSRVI implements AlarmSRV {
     private final ObjectMapper objectMapper;
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void send(Long memberId, Long alarmId, Map<String, String> params) {
         // 회원 존재 확인
         if (!memberRepo.existsById(memberId)) {
@@ -51,7 +52,7 @@ public class AlarmSRVI implements AlarmSRV {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void sendToMany(List<Long> memberIds, Long alarmId, Map<String, String> params) {
         // 알람 템플릿 존재 확인
         if (!alarmMapper.existsAlarmById(alarmId)) {

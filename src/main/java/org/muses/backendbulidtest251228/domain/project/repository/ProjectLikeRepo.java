@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -41,5 +42,9 @@ public interface ProjectLikeRepo extends JpaRepository<ProjectLikeENT, Long> {
         """
     )
     Page<ProjectLikeENT> findAllByMemberIdWithProject(@Param("memberId") Long memberId, Pageable pageable);
+
+    // 프로젝트에 좋아요 누른 멤버 ID 목록 조회 (알람 발송용)
+    @Query("SELECT pl.member.id FROM ProjectLikeENT pl WHERE pl.project.id = :projectId")
+    List<Long> findMemberIdsByProjectId(@Param("projectId") Long projectId);
 
 }
