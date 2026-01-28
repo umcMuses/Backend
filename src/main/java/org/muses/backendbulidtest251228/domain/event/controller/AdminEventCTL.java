@@ -1,7 +1,9 @@
 package org.muses.backendbulidtest251228.domain.event.controller;
 
+import java.util.List;
+
 import org.muses.backendbulidtest251228.domain.event.dto.EventDT;
-import org.muses.backendbulidtest251228.domain.event.service.AdminEventSV;
+import org.muses.backendbulidtest251228.domain.event.service.AdminEventSRV;
 import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -9,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.Mapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,9 +27,9 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/admin/events")
 @RequiredArgsConstructor
 @Tag(name = "Admin - Event/Notice", description = "관리자 이벤트 관리 API")
-public class AdminEventController {
+public class AdminEventCTL {
 
-	private final AdminEventSV adminEventSV;
+	private final AdminEventSRV adminEventSV;
 
 	@PostMapping
 	@Operation(summary = "공지글 작성 및 예약 설정 API", description = "")
@@ -55,18 +56,27 @@ public class AdminEventController {
 	}
 
 	@GetMapping("/{eventId}")
-	@Operation(summary = "관리자 공지글 전체 조회", description = "관리자용 전체 조회입니다. (페이지네이션 적용)")
-	public ApiResponse<Page<EventDT.EventResponse>> getAllEvents(
-			@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "10") int size) {
-		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-		return ApiResponse.success(adminEventSV.getAllEvents(pageable));
-	}
-
-	@GetMapping("/{eventId}")
 	@Operation(summary = "공지글 개별 상세 조회", description = "관리자용 상세 조회")
-	public ApiResponse<EventDT.EventResponse> getEventDetail(@PathVariable Long eventId) {
+	public ApiResponse<EventDT.EventDetailResponse> getEventDetail(@PathVariable Long eventId) {
 		return ApiResponse.success(adminEventSV.getEventDetail(eventId));
 	}
 
+	@GetMapping("/{eventId}")
+	@Operation(summary = "관리자 공지글 전체 조회", description = "No.계산을 위한 Page 정보 함께 반환")
+	public ApiResponse<List<EventDT.EventListResponse>> getAllEvents(
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "10") int size
+	) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by("uploadDateTime").descending());
+
+		Page<EventDT.EventListResponse> resultPage = adminEventSV.getAllEvents(pageable);
+
+		ApiResponse.PageInfo pageInfo = new ApiResponse.PageInfo(
+			resultPage.getNumber(),
+			resultPage.getSize(),
+			resultPage.getTotalElements()
+		);
+
+		return ApiResponse.success(resultPage.getContent(), pageInfo);
+	}
 }

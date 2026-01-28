@@ -42,7 +42,7 @@ public class EventDT {
 	@Getter
 	@Builder
 	@AllArgsConstructor
-	public static class EventResponse {
+	public static class EventDetailResponse {
 		private Long eventId;
 		private EventCategory category;
 		private String title;
@@ -53,19 +53,47 @@ public class EventDT {
 		private LocalDateTime updateAt;			// 수정일
 		private String status;					// 예약됨, 게시됨
 
-		public static EventResponse from(Event event) {
+		public static EventDetailResponse from(Event event) {
 			LocalDateTime now = LocalDateTime.now();
 			String status = "게시됨";
 
 			if (event.getUploadDateTime() != null && event.getUploadDateTime().isAfter(now)) {
 				status = "예약됨";
 			}
-			return EventResponse.builder()
+			return EventDetailResponse.builder()
 				.eventId(event.getId())
 				.category(event.getCategory())
 				.title(event.getTitle())
 				.description(event.getDescription())
 				.content(event.getContent())
+				.uploadDateTime(event.getUploadDateTime())
+				.createAt(event.getCreatedAt())
+				.updateAt(event.getUpdatedAt())
+				.status(status)
+				.build();
+		}
+	}
+
+	@Getter
+	@Builder
+	@AllArgsConstructor
+	public static class EventListResponse {
+		private Long eventId;
+		private EventCategory category;
+		private String title;
+		private LocalDateTime uploadDateTime;
+		private LocalDateTime createAt;
+		private LocalDateTime updateAt;
+		private String status;
+
+		public static EventListResponse from(Event event) {
+			LocalDateTime now = LocalDateTime.now();
+			String status = (event.getUploadDateTime() != null && event.getUploadDateTime().isAfter(now)) ? "예약됨": "게시됨";
+
+			return EventListResponse.builder()
+				.eventId(event.getId())
+				.category(event.getCategory())
+				.title(event.getTitle())
 				.uploadDateTime(event.getUploadDateTime())
 				.createAt(event.getCreatedAt())
 				.updateAt(event.getUpdatedAt())
