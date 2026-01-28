@@ -50,8 +50,8 @@ public class EventDT {
 		private String description;
 		private String content;
 		private LocalDateTime uploadDateTime;	// 예약 게시일
-		private LocalDateTime createAt;			// 즉시 게시일
-		private LocalDateTime updateAt;			// 수정일
+		private LocalDateTime createdAt;			// 즉시 게시일
+		private LocalDateTime updatedAt;			// 수정일
 		private String status;					// 예약됨, 게시됨
 
 		public static EventDetailResponse from(Event event) {
@@ -68,8 +68,8 @@ public class EventDT {
 				.description(event.getDescription())
 				.content(event.getContent())
 				.uploadDateTime(event.getUploadDateTime())
-				.createAt(event.getCreatedAt())
-				.updateAt(event.getUpdatedAt())
+				.createdAt(event.getCreatedAt())
+				.updatedAt(event.getUpdatedAt())
 				.status(status)
 				.build();
 		}
@@ -83,8 +83,8 @@ public class EventDT {
 		private EventCategory category;
 		private String title;
 		private LocalDateTime uploadDateTime;
-		private LocalDateTime createAt;
-		private LocalDateTime updateAt;
+		private LocalDateTime createdAt;
+		private LocalDateTime updatedAt;
 		private String status;
 
 		public static EventListResponse from(Event event) {
@@ -96,8 +96,8 @@ public class EventDT {
 				.category(event.getCategory())
 				.title(event.getTitle())
 				.uploadDateTime(event.getUploadDateTime())
-				.createAt(event.getCreatedAt())
-				.updateAt(event.getUpdatedAt())
+				.createdAt(event.getCreatedAt())
+				.updatedAt(event.getUpdatedAt())
 				.status(status)
 				.build();
 		}
