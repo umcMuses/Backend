@@ -33,6 +33,7 @@ public class EventDT {
 		private String description;
 
 		@Schema(description = "본문 내용", example = "<p>상세 본문 내용...</p>")
+		@NotBlank
 		private String content;
 
 		@Schema(description = "업로드 예약 시간 (null 이면 즉시 업로드, 게시일에 update_at 사용)", example = "2026-02-01T10:00:00")

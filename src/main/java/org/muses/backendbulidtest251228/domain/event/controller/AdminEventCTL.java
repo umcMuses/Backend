@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -33,7 +34,7 @@ public class AdminEventCTL {
 
 	@PostMapping
 	@Operation(summary = "공지글 작성 및 예약 설정 API", description = "")
-	public ApiResponse<Long> createEvent(@RequestBody EventDT.EventRequest request) {
+	public ApiResponse<Long> createEvent(@RequestBody @Valid EventDT.EventRequest request) {
 		Long eventId = adminEventSV.createEvent(request);
 		return ApiResponse.success(eventId);
 	}
@@ -50,7 +51,7 @@ public class AdminEventCTL {
 
 	@DeleteMapping("/{eventId}")
 	@Operation(summary = "공지글 삭제 API", description = "공지글 영구 삭제")
-	public ApiResponse<String> updateEvent(@PathVariable Long eventId) {
+	public ApiResponse<String> deleteEvent(@PathVariable Long eventId) {
 		adminEventSV.deleteEvent(eventId);
 		return ApiResponse.success("공지글이 삭제되었습니다.");
 	}
