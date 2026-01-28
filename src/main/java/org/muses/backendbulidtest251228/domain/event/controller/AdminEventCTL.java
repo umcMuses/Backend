@@ -61,7 +61,7 @@ public class AdminEventCTL {
 		return ApiResponse.success(adminEventSV.getEventDetail(eventId));
 	}
 
-	@GetMapping("/{eventId}")
+	@GetMapping()
 	@Operation(summary = "관리자 공지글 전체 조회", description = "No.계산을 위한 Page 정보 함께 반환")
 	public ApiResponse<List<EventDT.EventListResponse>> getAllEvents(
 		@RequestParam(defaultValue = "0") int page,
