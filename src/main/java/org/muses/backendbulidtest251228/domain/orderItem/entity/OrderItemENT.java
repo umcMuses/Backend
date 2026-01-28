@@ -32,10 +32,17 @@ public class OrderItemENT {
     @Column(name = "reward_id", nullable = false)
     private Long rewardId;
 
+    @Setter
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
     @Column(name = "price", nullable = false, precision = 15, scale = 2)
     private BigDecimal price;
+
+    public void changeQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
 }
+
+
 

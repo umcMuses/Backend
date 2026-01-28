@@ -51,4 +51,7 @@ public interface ProjectRepo extends JpaRepository<ProjectENT, Long> {
     // 오픈 시간이 된 APPROVED 프로젝트 조회 (스케줄러용)
     @Query("SELECT p FROM ProjectENT p WHERE p.status = 'APPROVED' AND p.opening BETWEEN :start AND :end")
     List<ProjectENT> findByStatusApprovedAndOpeningBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    // ==================== 랜딩 페이지 관련 메서드 ====================
+
+    List<ProjectENT> findTop6ByFundingStatusOrderBySupporterCountDesc(FundingStatus fundingStatus);
 }

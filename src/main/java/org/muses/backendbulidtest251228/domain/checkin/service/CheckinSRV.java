@@ -16,11 +16,11 @@ import java.time.LocalDateTime;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class CheckinService {
+public class CheckinSRV {
 
     private final ProjectCheckinLinkRepo linkRepo;
     private final TicketRepo ticketRepo;
-    private final CheckinQueryService queryService;
+    private final CheckinQuerySRV queryService;
 
     // 체크인 링크(token)와 티켓 토큰으로 체크인을 처리한다
     @Transactional
