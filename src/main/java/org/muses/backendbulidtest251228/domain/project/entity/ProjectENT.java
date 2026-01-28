@@ -188,4 +188,10 @@ public class ProjectENT {
     public boolean isGoalAchieved() {
         return this.achieveRate != null && this.achieveRate >= 100;
     }
+
+    // ProjectENT 통계 업데이트
+    public void updateStatistics(int achieveRate, int supporterCount) {
+        this.achieveRate = Math.max(0, achieveRate);
+        this.supporterCount = Math.max(0, supporterCount);
+    }
 }

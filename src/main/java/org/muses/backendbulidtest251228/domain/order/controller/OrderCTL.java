@@ -65,7 +65,7 @@ public class OrderCTL {
 
     }
 
-    @Operation(
+    /*@Operation(
             summary = "주문 상세 취소 (부분 취소)",
             description = "주문 상세의 수량을 차감하거나 전체 삭제하고, 주문 금액이 0원이 되면 주문을 취소합니다."
     )
@@ -80,7 +80,7 @@ public class OrderCTL {
 
 
         return ApiResponse.success("OK");
-    }
+    }*/
 
 
     @Operation(

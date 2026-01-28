@@ -148,10 +148,24 @@ class PaymentTest {
 
 
 
-        // TODO Project테이블 자체에 저장되던 유저고유키를 외래키 등록시켰습니다. 수정 부탁드립니다
+        Member member = memberREP.save(
+                Member.builder()
+                        .provider(Provider.LOCAL)
+                        .role(Role.MAKER)
+                        .name("테스트유저")
+                        .email("test_" + UUID.randomUUID() + "@muses.com")
+                        .providerId("local_" + UUID.randomUUID())
+                        .passwd("test-password")
+                        .phoneNumber("01012345678")
+                        .nickName("tester_" + UUID.randomUUID())
+                        .build()
+        );
+
+
+        // member 변경
         ProjectENT project = projectREP.save(
                 ProjectENT.builder()
-                        .userId(1L)
+                        .member(member)
                         .status("DRAFT")
                         .lastSavedStep(1)
                         .title("뮤지컬 <봄의 노래>")
@@ -179,18 +193,7 @@ class PaymentTest {
                         .build()
         );
 
-        Member member = memberREP.save(
-                Member.builder()
-                        .provider(Provider.LOCAL)
-                        .role(Role.MAKER)
-                        .name("테스트유저")
-                        .email("test_" + UUID.randomUUID() + "@muses.com")
-                        .providerId("local_" + UUID.randomUUID())
-                        .passwd("test-password")
-                        .phoneNumber("01012345678")
-                        .nickName("tester_" + UUID.randomUUID())
-                        .build()
-        );
+
 
 
 

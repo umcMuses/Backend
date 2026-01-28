@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 
 @Repository
@@ -18,4 +19,7 @@ public interface RewardRepo extends JpaRepository<RewardENT, Long> {
     @Modifying
     @Query("DELETE FROM RewardENT r WHERE r.project.id = :projectId")
     void deleteByProjectId(Long projectId);
+
+    // 해당하는 리워드 id 전체 조회
+    List<RewardENT> findAllByIdIn(Collection<Long> ids);
 }
