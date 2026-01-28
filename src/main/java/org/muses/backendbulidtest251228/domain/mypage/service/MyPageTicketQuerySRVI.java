@@ -33,19 +33,30 @@ public class MyPageTicketQuerySRVI implements MyPageTicketQuerySRV {
         Member me = resolveMember(userDetails);
 
         List<TicketENT> tickets = ticketRepo.findMyTickets(me.getId());
+        Set<Long> rewardIds = tickets.stream()
+                .map(TicketENT::getOrderItem)
+                .filter(Objects::nonNull)
+                .map(OrderItemENT::getRewardId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Map<Long, RewardENT> rewardMap = rewardIds.isEmpty()
+                ? Map.of()
+                : rewardRepo.findAllById(rewardIds).stream()
+                .collect(Collectors.toMap(RewardENT::getId, r -> r));
 
         return tickets.stream()
-                .map(t -> toDto(t))
+                .map(t -> toDto(t, rewardMap))
                 .collect(Collectors.toList());
     }
 
-    private MyTicketResDT toDto(TicketENT t) {
+    private MyTicketResDT toDto(TicketENT t, Map<Long, RewardENT> rewardMap) {
         OrderItemENT item = t.getOrderItem();
         ProjectENT project = (item != null) ? item.getProject() : null;
 
         String optionLabel = null;
         if (item != null && item.getRewardId() != null) {
-            RewardENT reward = rewardRepo.findById(item.getRewardId()).orElse(null);
+            RewardENT reward = rewardMap.get(item.getRewardId());
             if (reward != null) {
                 // reward_name 우선, 없으면 description
                 optionLabel = (reward.getRewardName() != null && !reward.getRewardName().isBlank())

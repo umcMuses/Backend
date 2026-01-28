@@ -48,7 +48,16 @@ public class CreatorApplicationSRVI implements CreatorApplicationSRV {
             );
         }
 
-        CreatorApplicationENT app = repo.save(CreatorApplicationENT.create(member, type));
+        CreatorApplicationENT app;
+        try {
+                app = repo.save(CreatorApplicationENT.create(member, type));
+            } catch (org.springframework.dao.DataIntegrityViolationException e) {
+                throw new BusinessException(
+                        ErrorCode.BAD_REQUEST,
+                        "이미 심사중(PENDING)인 크리에이터 전환 신청이 존재합니다.",
+                        Map.of("memberId", member.getId())
+                );
+            }
 
         return CreatorApplyResDT.builder()
                 .applicationId(app.getAppId())

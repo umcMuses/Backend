@@ -179,6 +179,7 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
            """)
     List<Long> findDistinctMemberIdsByProjectId(@Param("projectId") Long projectId);
 // 주문 관련 빌드 오류
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
     update OrderENT o
        set o.nextRetryAt = null
