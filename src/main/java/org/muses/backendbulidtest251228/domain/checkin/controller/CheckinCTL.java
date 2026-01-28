@@ -9,7 +9,7 @@ import org.muses.backendbulidtest251228.domain.checkin.dto.CheckinConfirmReqDTO;
 import org.muses.backendbulidtest251228.domain.checkin.dto.CheckinConfirmResDTO;
 import org.muses.backendbulidtest251228.domain.checkin.generator.QrGenerator;
 import org.muses.backendbulidtest251228.domain.checkin.service.CheckinLinkSRV;
-import org.muses.backendbulidtest251228.domain.checkin.service.CheckinService;
+import org.muses.backendbulidtest251228.domain.checkin.service.CheckinSRV;
 import org.muses.backendbulidtest251228.domain.ticket.entity.TicketENT;
 import org.muses.backendbulidtest251228.domain.ticket.repository.TicketRepo;
 import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
@@ -28,9 +28,9 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/checkin")
-public class CheckinController {
+public class CheckinCTL {
 
-    private final CheckinService checkinService;
+    private final CheckinSRV checkinService;
 
     private final CheckinLinkSRV linkService;
     private final QrGenerator qrGenerator;
