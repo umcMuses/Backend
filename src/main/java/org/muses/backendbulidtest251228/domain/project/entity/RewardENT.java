@@ -89,6 +89,11 @@ public class RewardENT {
         return this.totalQuantity - this.soldQuantity;
     }
 
+    // 판매 수량 변경
+    public void changeSoldQuantity(int newSoldQuantity) {
+        this.soldQuantity = Math.max(0, newSoldQuantity);
+    }
+
     // 정적 팩토리 메서드
     public static RewardENT of(String rewardName, BigDecimal price, String description,
                                 Integer totalQuantity, RewardType type) {
