@@ -73,12 +73,18 @@ public class ProjectStatSRV {
             }
         }
 
-        if (!rewardSoldMap.isEmpty()) {
-            List<RewardENT> rewards = rewardRepo.findAllByIdIn(rewardSoldMap.keySet());
-            for (RewardENT r : rewards) {
-                int newSold = rewardSoldMap.getOrDefault(r.getId(), 0);
-                r.changeSoldQuantity(newSold);
-            }
+
+
+        // 1) 해당 프로젝트의 모든 리워드 목록 조회 (주문이 없는 리워드까지 0으로 초기화하기 위함)
+        List<RewardENT> allRewards = rewardRepo.findByProjectId(project.getId());
+
+// 2) 모든 리워드를 순회하며 soldQuantity 재계산
+        for (RewardENT reward : allRewards) {
+            // 주문 내역(rewardSoldMap)에 있으면 그 수량을, 없으면 0을 할당
+            int updatedSoldQuantity = rewardSoldMap.getOrDefault(reward.getId(), 0);
+
+            // 리워드 엔티티의 수량 업데이트 (Dirty Checking으로 반영)
+            reward.changeSoldQuantity(updatedSoldQuantity);
         }
 
         // 7) Settlement upsert / delete
