@@ -14,7 +14,7 @@ insert ignore into alarm (alarm_id, alarm_context)
 values (3, '${projectName} 결제가 취소되었습니다.');
 
 insert ignore into alarm (alarm_id, alarm_context)
-values (4, '${projectName} 펀딩이 성공했습니다');
+values (4, '${projectName} 펀딩이 성공했습니다.');
 
 
 insert ignore into alarm (alarm_id, alarm_context)

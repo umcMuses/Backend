@@ -8,10 +8,7 @@ import org.muses.backendbulidtest251228.domain.settlement.dto.SettlementListReqD
 import org.muses.backendbulidtest251228.domain.settlement.dto.SettlementListResDTO;
 import org.muses.backendbulidtest251228.domain.settlement.service.SettlementSRV;
 import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -56,7 +53,7 @@ public class SettlementCTL {
             summary = "정산 지급 완료 처리",
             description = "settlementId에 해당하는 정산 상태를 COMPLETED(지급 완료)로 변경합니다."
     )
-    @GetMapping("/payout")
+    @PostMapping("/payout")
     public ApiResponse<String> payout(
             @RequestParam("settlementId") Long id
     ) {

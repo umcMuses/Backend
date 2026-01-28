@@ -171,20 +171,6 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
                                         @Param("now") LocalDateTime now);
 
 
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("""
-    update OrderENT o
-       set o.nextRetryAt = null,
-           o.retryCount = 2
-     where o.id = :orderId
-       and o.status = :status
-""")
-    int stopRetry(@Param("orderId") Long orderId,
-                  @Param("status") OrderStatus status);
-
-
-    @Query("select o from OrderENT o join fetch o.orderItems where o.id in :ids")
-    List<OrderENT> findAllWithItemsByIds(List<Long> ids);
 
     @Query("""
            select distinct o.member.id

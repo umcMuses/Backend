@@ -46,6 +46,7 @@ public class SettlementSRV {
                 .build();
     }
 
+    @Transactional
     public void payout(Long id) {
 
         SettlementENT settlement = settlementRepo.findById(id)

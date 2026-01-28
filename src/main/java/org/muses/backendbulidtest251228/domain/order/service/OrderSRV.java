@@ -116,7 +116,7 @@ public class OrderSRV {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         //totalSum 이 더 크면
-        if (totalSum.compareTo(targetAmount) > 0) {
+        if (totalSum.compareTo(targetAmount) >= 0) {
 
 
 

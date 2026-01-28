@@ -34,6 +34,7 @@ public class OrderItemReqDT {
             example = "55000",
             minimum = "0"
     )
+    @NotNull
     @Min(value = 0, message = "금액은 0원 이상이어야 합니다.")
     private int unitPrice;
 }
