@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class CheckinQueryService {
+public class CheckinQuerySRV {
 
     private final OrderItemREP orderItemRep;
     private final RewardRepo rewardRepo;

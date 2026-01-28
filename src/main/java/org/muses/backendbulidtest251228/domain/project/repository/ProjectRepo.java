@@ -47,4 +47,8 @@ public interface ProjectRepo extends JpaRepository<ProjectENT, Long> {
     // 오래 멈춘 CLOSING 프로젝트 조회 (재시도용)
     @Query("SELECT p FROM ProjectENT p WHERE p.fundingStatus = 'CLOSING' AND p.updatedAt < :threshold")
     List<ProjectENT> findStuckClosing(@Param("threshold") LocalDateTime threshold, Pageable pageable);
+
+    // ==================== 랜딩 페이지 관련 메서드 ====================
+
+    List<ProjectENT> findTop6ByFundingStatusOrderBySupporterCountDesc(FundingStatus fundingStatus);
 }
