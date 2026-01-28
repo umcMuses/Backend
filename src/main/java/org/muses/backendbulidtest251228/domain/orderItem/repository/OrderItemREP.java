@@ -21,4 +21,8 @@ public interface OrderItemREP extends JpaRepository<OrderItemENT, Long> {
       ORDER BY SUM(oi.quantity) DESC
     """)
     List<Object[]> aggregateRewardSales(@Param("projectId") Long projectId);
+
+
+
+
 }

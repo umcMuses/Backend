@@ -17,6 +17,8 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
 
     List<OrderENT> findByProjectIdAndStatus(Long projectId, OrderStatus status);
 
+
+
     // 프로젝트 실패 처리: RESERVED -> VOID (펀딩 실패 무효)
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
@@ -142,4 +144,38 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
       and o.status = org.muses.backendbulidtest251228.domain.order.enums.OrderStatus.PAID
 """)
     List<Long> findDistinctPaidMemberIdsByProject(@Param("projectId") Long projectId);
+
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+    update OrderENT o
+       set o.nextRetryAt = :nextRetryAt,
+           o.retryCount = 1
+     where o.project.id = :projectId
+       and o.status = :status
+""")
+    int scheduleRetryForFailedOrders(@Param("projectId") Long projectId,
+                                     @Param("status") OrderStatus status,
+                                     @Param("nextRetryAt") LocalDateTime nextRetryAt);
+
+
+    @Query("""
+    select o
+      from OrderENT o
+     where o.status = :status
+       and o.nextRetryAt is not null
+       and o.nextRetryAt <= :now
+       and coalesce(o.retryCount, 0) = 1
+""")
+    List<OrderENT> findRetryTargetsOnce(@Param("status") OrderStatus status,
+                                        @Param("now") LocalDateTime now);
+
+
+
+    @Query("""
+           select distinct o.member.id
+           from OrderENT o
+           where o.project.id = :projectId
+           """)
+    List<Long> findDistinctMemberIdsByProjectId(@Param("projectId") Long projectId);
 }
