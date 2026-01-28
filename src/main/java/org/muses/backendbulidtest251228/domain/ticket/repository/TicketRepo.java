@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface TicketRepo extends JpaRepository<TicketENT, Long> {
 
@@ -23,4 +24,15 @@ public interface TicketRepo extends JpaRepository<TicketENT, Long> {
            and t.status = 'UNUSED'
     """)
     int markUsedIfUnused(@Param("token") String token);
+// 내 티켓 리스트
+    @Query("""
+    select t
+      from TicketENT t
+      join fetch t.orderItem oi
+      join fetch oi.order o
+      join fetch oi.project p
+     where o.member.id = :memberId
+     order by o.createdAt desc
+""")
+    List<TicketENT> findMyTickets(@Param("memberId") Long memberId);
 }
