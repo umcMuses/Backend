@@ -2,6 +2,9 @@ package org.muses.backendbulidtest251228.domain.project.service;
 
 import lombok.RequiredArgsConstructor;
 import org.muses.backendbulidtest251228.domain.alarm.service.AlarmSRV;
+import org.muses.backendbulidtest251228.domain.storage.dto.AttachmentResponseDT;
+import org.muses.backendbulidtest251228.domain.storage.entity.AttachmentENT;
+import org.muses.backendbulidtest251228.domain.storage.service.AttachmentSRV;
 import org.muses.backendbulidtest251228.domain.project.dto.request.FundingRequestDT;
 import org.muses.backendbulidtest251228.domain.project.dto.request.InfoRequestDT;
 import org.muses.backendbulidtest251228.domain.project.dto.request.OutlineRequestDT;
@@ -30,6 +33,8 @@ import org.muses.backendbulidtest251228.domain.project.repository.ProjectManager
 import org.muses.backendbulidtest251228.domain.project.repository.ProjectRepo;
 import org.muses.backendbulidtest251228.domain.project.repository.ProjectTagRepo;
 import org.muses.backendbulidtest251228.domain.project.repository.RewardRepo;
+import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
+import org.muses.backendbulidtest251228.global.businessError.BusinessException;
 import org.muses.backendbulidtest251228.global.security.PrincipalDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,23 +67,20 @@ public class ProjectSRVI implements ProjectSRV {
     private final ProjectLikeRepo projectLikeRepo;
     private final MemberRepo memberRepo;
     private final ProjectMapper projectMapper;
-    
-    /*
-     * NOTE: 알람 서비스 사용 예시 (데모용)
-     * - 실제 운영 시에는 이 부분을 제거하거나 적절한 위치로 이동해야 합니다.
-     * - 알람 발송 방법은 AlarmSRV 인터페이스의 주석을 참고하세요.
-     */
+
     private final AlarmSRV alarmSRV;
+    private final AttachmentSRV attachmentSRV;
 
     // ==================== 프로젝트 생성 ====================
     @Override
     @Transactional
     public Long createProject(ProjectCreateRequestDT request) {
         // JWT에서 현재 로그인한 유저 ID 조회 (필수)
-        Long userId = resolveCurrentMemberId();
+        Long memberId = resolveCurrentMemberId();
+        Member member = findMemberById(memberId);
 
         ProjectENT project = ProjectENT.builder()
-                .userId(userId)
+                .member(member)
                 .title(request.getTitle() != null ? request.getTitle() : "새 프로젝트")
                 .status("DRAFT")
                 .lastSavedStep(0)
@@ -87,22 +89,21 @@ public class ProjectSRVI implements ProjectSRV {
 
         ProjectENT savedProject = projectRepo.save(project);
 
-        // 알람 발송
-        try {
-            alarmSRV.send(
-                    userId,
-                    1L,
-                    Map.of("projectName", savedProject.getTitle())
-            );
-        } catch (Exception e) {
-            log.warn("[ALARM] 알람 발송 실패 - userId: {}, error: {}", userId, e.getMessage());
-        }
+        // 알람 발송 (테스트 목적)
+//        try {
+//            alarmSRV.send(
+//                    memberId,
+//                    1L,
+//                    Map.of("projectName", savedProject.getTitle())
+//            );
+//        } catch (Exception e) {
+//            log.warn("[ALARM] 알람 발송 실패 - memberId: {}, error: {}", memberId, e.getMessage());
+//        }
 
         return savedProject.getId();
     }
 
     // ==================== 프로젝트 상세 조회 (임시저장 데이터 통합 조회) ====================
-    // TODO: 컨버터 사용 여부 확인
     @Override
     public ProjectDetailResponseDT getProjectDetail(Long projectId) {
         ProjectENT project = findProjectById(projectId);
@@ -125,6 +126,18 @@ public class ProjectSRVI implements ProjectSRV {
         // 진행자 정보 조회
         ProjectManagerENT manager = projectManagerRepo.findById(projectId).orElse(null);
 
+        // 첨부파일 조회
+        List<AttachmentResponseDT> attachments = attachmentSRV.getAttachments("PROJECT", projectId)
+                .stream()
+                .map(AttachmentResponseDT::from)
+                .collect(Collectors.toList());
+
+        // 정산 서류 조회
+        List<AttachmentResponseDT> documents = attachmentSRV.getAttachments("PROJECT_DOC", projectId)
+                .stream()
+                .map(AttachmentResponseDT::from)
+                .collect(Collectors.toList());
+
         return ProjectDetailResponseDT.builder()
                 .projectId(project.getId())
                 .status(project.getStatus())
@@ -146,10 +159,12 @@ public class ProjectSRVI implements ProjectSRV {
                 // 4단계: 스토리
                 .storyHtml(content != null ? content.getStoryHtml() : null)
                 .refundPolicy(content != null ? content.getRefundPolicy() : null)
+                .attachments(attachments)
                 // 5단계: 정보
                 .hostProfileImg(manager != null ? manager.getHostProfileImg() : null)
                 .hostPhone(manager != null ? manager.getHostPhone() : null)
                 .hostBio(manager != null ? manager.getHostBio() : null)
+                .documents(documents)
                 // 통계
                 .achieveRate(project.getAchieveRate())
                 .supporterCount(project.getSupporterCount())
@@ -169,7 +184,6 @@ public class ProjectSRVI implements ProjectSRV {
                 .collect(Collectors.toList());
     }
 
-    // TODO: 컨버터 사용 여부 확인
     private ProjectCardResponseDT toCardDTO(ProjectENT project) {
         LocalDateTime now = LocalDateTime.now();
         Long dDay = null;
@@ -183,6 +197,9 @@ public class ProjectSRVI implements ProjectSRV {
             isScheduled = project.getFundingStatus().name().equals("SCHEDULED");
         }
 
+        // 첨부파일 중 첫 번째 이미지 URL 조회
+        String attachmentImageUrl = attachmentSRV.getFirstImageUrl("PROJECT", project.getId());
+
         return ProjectCardResponseDT.builder()
                 .projectId(project.getId())
                 .thumbnailUrl(project.getThumbnailUrl())
@@ -193,6 +210,7 @@ public class ProjectSRVI implements ProjectSRV {
                 .fundingStatus(project.getFundingStatus() != null ? project.getFundingStatus().name() : null)
                 .isScheduled(isScheduled)
                 .opening(project.getOpening())
+                .attachmentImageUrl(attachmentImageUrl)
                 .build();
     }
 
@@ -214,6 +232,25 @@ public class ProjectSRVI implements ProjectSRV {
                 offset
         );
 
+        // 각 프로젝트에 첨부 이미지 URL 추가
+        List<ProjectCardResponseDT> projectsWithImages = projects.stream()
+                .map(card -> {
+                    String attachmentImageUrl = attachmentSRV.getFirstImageUrl("PROJECT", card.getProjectId());
+                    return ProjectCardResponseDT.builder()
+                            .projectId(card.getProjectId())
+                            .thumbnailUrl(card.getThumbnailUrl())
+                            .title(card.getTitle())
+                            .achieveRate(card.getAchieveRate())
+                            .deadline(card.getDeadline())
+                            .dDay(card.getDDay())
+                            .fundingStatus(card.getFundingStatus())
+                            .isScheduled(card.getIsScheduled())
+                            .opening(card.getOpening())
+                            .attachmentImageUrl(attachmentImageUrl)
+                            .build();
+                })
+                .collect(Collectors.toList());
+
         // 전체 개수 조회
         int totalCount = projectMapper.countProjectCards(
                 request.getRegion(),
@@ -226,7 +263,7 @@ public class ProjectSRVI implements ProjectSRV {
         boolean hasNext = page < totalPages - 1;
 
         return ProjectListResponseDT.builder()
-                .projects(projects)
+                .projects(projectsWithImages)
                 .totalCount(totalCount)
                 .page(page)
                 .size(size)
@@ -241,6 +278,12 @@ public class ProjectSRVI implements ProjectSRV {
     @Transactional
     public void saveOutline(Long projectId, OutlineRequestDT request) {
         ProjectENT project = findProjectById(projectId);
+
+        // 본인 프로젝트인지 확인
+        Long currentMemberId = resolveCurrentMemberId();
+        if (!project.getMember().getId().equals(currentMemberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "본인의 프로젝트만 수정할 수 있습니다.");
+        }
 
         // 프로젝트 기본 정보 업데이트
         project.updateOutline(request);
@@ -266,6 +309,12 @@ public class ProjectSRVI implements ProjectSRV {
     public void saveFunding(Long projectId, FundingRequestDT request) {
         ProjectENT project = findProjectById(projectId);
 
+        // 본인 프로젝트인지 확인
+        Long currentMemberId = resolveCurrentMemberId();
+        if (!project.getMember().getId().equals(currentMemberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "본인의 프로젝트만 수정할 수 있습니다.");
+        }
+
         project.updateFunding(request);
 
         project.updateLastSavedStep(2);
@@ -277,6 +326,12 @@ public class ProjectSRVI implements ProjectSRV {
     @Transactional
     public void saveRewards(Long projectId, RewardsRequestDT request) {
         ProjectENT project = findProjectById(projectId);
+
+        // 본인 프로젝트인지 확인
+        Long currentMemberId = resolveCurrentMemberId();
+        if (!project.getMember().getId().equals(currentMemberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "본인의 프로젝트만 수정할 수 있습니다.");
+        }
 
         // 기존 리워드 삭제
         rewardRepo.deleteByProjectId(projectId);
@@ -305,6 +360,12 @@ public class ProjectSRVI implements ProjectSRV {
     public void saveStory(Long projectId, StoryRequestDT request) {
         ProjectENT project = findProjectById(projectId);
 
+        // 본인 프로젝트인지 확인
+        Long currentMemberId = resolveCurrentMemberId();
+        if (!project.getMember().getId().equals(currentMemberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "본인의 프로젝트만 수정할 수 있습니다.");
+        }
+
         // ProjectContent 조회 또는 생성
         ProjectContentENT content = projectContentRepo.findById(projectId)
                 .orElseGet(() -> {
@@ -325,11 +386,32 @@ public class ProjectSRVI implements ProjectSRV {
 
     @Override
     @Transactional
-    public String uploadImage(Long projectId, MultipartFile image) {
-        // TODO: 실제 이미지 업로드 로직 구현해야됨
-        // 현재는 임시 URL 반환
-        String imageUrl = "https://storage.example.com/projects/" + projectId + "/images/" + image.getOriginalFilename();
-        return imageUrl;
+    public List<String> uploadImages(Long projectId, List<MultipartFile> images, List<Long> deleteIds) {
+        ProjectENT project = findProjectById(projectId);
+
+        // 본인 프로젝트인지 확인
+        Long currentMemberId = resolveCurrentMemberId();
+        if (!project.getMember().getId().equals(currentMemberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "본인의 프로젝트만 수정할 수 있습니다.");
+        }
+
+        // 삭제할 첨부파일 DB에서 삭제 (실제 파일은 남겨둠)
+        if (deleteIds != null && !deleteIds.isEmpty()) {
+            for (Long attachmentId : deleteIds) {
+                attachmentSRV.deleteFromDb(attachmentId);
+            }
+        }
+
+        // 새 파일 업로드
+        List<String> fileUrls = new ArrayList<>();
+        if (images != null && !images.isEmpty()) {
+            List<AttachmentENT> attachments = attachmentSRV.uploadAll("PROJECT", projectId, images);
+            fileUrls = attachments.stream()
+                    .map(AttachmentENT::getFileUrl)
+                    .collect(Collectors.toList());
+        }
+        
+        return fileUrls;
     }
 
     // ==================== 5단계: 정보 ====================
@@ -338,11 +420,17 @@ public class ProjectSRVI implements ProjectSRV {
     public void saveInfo(Long projectId, InfoRequestDT request) {
         ProjectENT project = findProjectById(projectId);
 
+        // 본인 프로젝트인지 확인
+        Long currentMemberId = resolveCurrentMemberId();
+        if (!project.getMember().getId().equals(currentMemberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "본인의 프로젝트만 수정할 수 있습니다.");
+        }
+
         // ProjectManager 조회 또는 생성
         ProjectManagerENT manager = projectManagerRepo.findById(projectId)
                 .orElseGet(() -> {
                     ProjectManagerENT newManager = ProjectManagerENT.of(
-                            project.getUserId(),
+                            project.getMember().getId(),
                             request.getHostProfileImg(),
                             request.getHostPhone(),
                             request.getHostBirth(),
@@ -375,12 +463,32 @@ public class ProjectSRVI implements ProjectSRV {
 
     @Override
     @Transactional
-    public List<String> uploadDocuments(Long projectId, MultipartFile idCard, MultipartFile bankbook) {
-        // TODO: 실제 파일 업로드 로직 구현해야됨. 아직 어떻게 하는지 못들음
-        List<String> documentUrls = new ArrayList<>();
-        documentUrls.add("https://storage.example.com/projects/" + projectId + "/docs/" + idCard.getOriginalFilename());
-        documentUrls.add("https://storage.example.com/projects/" + projectId + "/docs/" + bankbook.getOriginalFilename());
-        return documentUrls;
+    public List<String> uploadDocuments(Long projectId, List<MultipartFile> documents, List<Long> deleteIds) {
+        ProjectENT project = findProjectById(projectId);
+
+        // 본인 프로젝트인지 확인
+        Long currentMemberId = resolveCurrentMemberId();
+        if (!project.getMember().getId().equals(currentMemberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "본인의 프로젝트만 수정할 수 있습니다.");
+        }
+
+        // 삭제할 첨부파일 DB에서 삭제 (실제 파일은 남겨둠)
+        if (deleteIds != null && !deleteIds.isEmpty()) {
+            for (Long attachmentId : deleteIds) {
+                attachmentSRV.deleteFromDb(attachmentId);
+            }
+        }
+
+        // 새 파일 업로드
+        List<String> fileUrls = new ArrayList<>();
+        if (documents != null && !documents.isEmpty()) {
+            List<AttachmentENT> attachments = attachmentSRV.uploadAll("PROJECT_DOC", projectId, documents);
+            fileUrls = attachments.stream()
+                    .map(AttachmentENT::getFileUrl)
+                    .collect(Collectors.toList());
+        }
+        
+        return fileUrls;
     }
 
     // ==================== 프로젝트 제출 ====================
@@ -388,6 +496,12 @@ public class ProjectSRVI implements ProjectSRV {
     @Transactional
     public void submitProject(Long projectId) {
         ProjectENT project = findProjectById(projectId);
+
+        // 본인 프로젝트인지 확인
+        Long currentMemberId = resolveCurrentMemberId();
+        if (!project.getMember().getId().equals(currentMemberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "본인의 프로젝트만 제출할 수 있습니다.");
+        }
 
         // 유효성 검사
         validateProjectForSubmission(project);
@@ -451,12 +565,12 @@ public class ProjectSRVI implements ProjectSRV {
     // ==================== Private Methods ====================
     private ProjectENT findProjectById(Long projectId) {
         return projectRepo.findById(projectId)
-                .orElseThrow(() -> new IllegalArgumentException("프로젝트를 찾을 수 없습니다. id=" + projectId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "프로젝트를 찾을 수 없습니다. id=" + projectId));
     }
 
     private Member findMemberById(Long memberId) {
         return memberRepo.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다. id=" + memberId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "회원을 찾을 수 없습니다. id=" + memberId));
     }
 
     /**
@@ -466,23 +580,23 @@ public class ProjectSRVI implements ProjectSRV {
     private Long resolveCurrentMemberId() {
         Long memberId = resolveCurrentMemberIdOrNull();
         if (memberId == null) {
-            throw new IllegalStateException("로그인이 필요합니다.");
+            throw new BusinessException(ErrorCode.AUTH_REQUIRED, "로그인이 필요합니다.");
         }
         return memberId;
     }
 
     private void validateProjectForSubmission(ProjectENT project) {
         if (project.getLastSavedStep() < 5) {
-            throw new IllegalStateException("모든 단계를 완료해야 제출할 수 있습니다. 현재 단계: " + project.getLastSavedStep());
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "모든 단계를 완료해야 제출할 수 있습니다. 현재 단계: " + project.getLastSavedStep());
         }
         if (project.getTitle() == null || project.getTitle().isBlank()) {
-            throw new IllegalStateException("프로젝트 제목이 필요합니다.");
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "프로젝트 제목이 필요합니다.");
         }
         if (project.getTargetAmount() == null) {
-            throw new IllegalStateException("목표 금액이 필요합니다.");
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "목표 금액이 필요합니다.");
         }
         if (project.getDeadline() == null) {
-            throw new IllegalStateException("펀딩 마감일이 필요합니다.");
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "펀딩 마감일이 필요합니다.");
         }
     }
 

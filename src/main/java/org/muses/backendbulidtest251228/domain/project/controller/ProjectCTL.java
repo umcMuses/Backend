@@ -285,28 +285,32 @@ public class ProjectCTL {
     }
 
     @Operation(
-            summary = "4단계: 이미지 업로드",
+            summary = "4단계: 파일 업로드 (다중)",
             description = """
-                    스토리 본문용 이미지를 업로드합니다.
+                    스토리 본문용 파일을 업로드합니다. (이미지, 문서 등 여러 파일 가능)
+                    삭제할 첨부파일 ID 목록도 함께 전달할 수 있습니다.
                     
                     **응답 필드:**
                     - `projectId`: 프로젝트 ID
-                    - `imageUrl`: 업로드된 이미지 URL (스토리 본문에 삽입용)
+                    - `fileUrls`: 업로드된 파일 URL 목록
                     - `message`: 처리 결과 메시지
                     - `timestamp`: 처리 시각
                     """
     )
     @PostMapping(value = "/{projectId}/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<Map<String, Object>> uploadImage(
+    public ApiResponse<Map<String, Object>> uploadImages(
             @Parameter(description = "프로젝트 ID", required = true)
             @PathVariable Long projectId,
-            @RequestPart("image") MultipartFile image
+            @Parameter(description = "업로드할 파일 목록")
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @Parameter(description = "삭제할 첨부파일 ID 목록")
+            @RequestParam(value = "deleteIds", required = false) List<Long> deleteIds
     ) {
-        String imageUrl = projectSRV.uploadImage(projectId, image);
+        List<String> fileUrls = projectSRV.uploadImages(projectId, files, deleteIds);
         return ApiResponse.success(Map.of(
                 "projectId", projectId,
-                "imageUrl", imageUrl,
-                "message", "이미지 업로드 완료",
+                "fileUrls", fileUrls,
+                "message", "파일 처리 완료",
                 "timestamp", LocalDateTime.now().toString()
         ));
     }
@@ -339,13 +343,14 @@ public class ProjectCTL {
     }
 
     @Operation(
-            summary = "5단계: 정산 서류 업로드",
+            summary = "5단계: 정산 서류 업로드 (다중)",
             description = """
-                    정산용 서류(신분증/사업자등록증, 통장 사본)를 업로드합니다.
+                    정산용 서류를 업로드합니다. (신분증, 통장 사본 등 여러 파일 가능)
+                    삭제할 첨부파일 ID 목록도 함께 전달할 수 있습니다.
                     
                     **응답 필드:**
                     - `projectId`: 프로젝트 ID
-                    - `documentUrls`: 업로드된 서류 URL 목록 [신분증URL, 통장URL]
+                    - `documentUrls`: 업로드된 서류 URL 목록
                     - `message`: 처리 결과 메시지
                     - `timestamp`: 처리 시각
                     """
@@ -354,14 +359,16 @@ public class ProjectCTL {
     public ApiResponse<Map<String, Object>> uploadDocuments(
             @Parameter(description = "프로젝트 ID", required = true)
             @PathVariable Long projectId,
-            @RequestPart("idCard") MultipartFile idCard,
-            @RequestPart("bankbook") MultipartFile bankbook
+            @Parameter(description = "업로드할 파일 목록")
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @Parameter(description = "삭제할 첨부파일 ID 목록")
+            @RequestParam(value = "deleteIds", required = false) List<Long> deleteIds
     ) {
-        List<String> documentUrls = projectSRV.uploadDocuments(projectId, idCard, bankbook);
+        List<String> documentUrls = projectSRV.uploadDocuments(projectId, files, deleteIds);
         return ApiResponse.success(Map.of(
                 "projectId", projectId,
                 "documentUrls", documentUrls,
-                "message", "정산 서류 업로드 완료",
+                "message", "정산 서류 처리 완료",
                 "timestamp", LocalDateTime.now().toString()
         ));
     }

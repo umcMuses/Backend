@@ -46,7 +46,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
         Member me = resolveMember(userDetails);
 
         // 레포에 OrderBy 메서드 없을 수 있으니, 일단 가져와서 자바에서 정렬
-        List<ProjectENT> projects = projectRepo.findByUserId(me.getId()).stream()
+        List<ProjectENT> projects = projectRepo.findByMemberId(me.getId()).stream()
                 .sorted(Comparator.comparing(ProjectENT::getCreatedAt).reversed())
                 .toList();
 
@@ -94,7 +94,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "프로젝트를 찾을 수 없습니다.", Map.of("projectId", projectId)));
 
         // 내 프로젝트 검증
-        if (!Objects.equals(project.getUserId(), me.getId())) {
+        if (!Objects.equals(project.getMember().getId(), me.getId())) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "내 프로젝트만 조회할 수 있습니다.", Map.of("projectId", projectId));
         }
 
@@ -124,7 +124,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
         ProjectENT project = projectRepo.findById(projectId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "프로젝트를 찾을 수 없습니다.", Map.of("projectId", projectId)));
 
-        if (!Objects.equals(project.getUserId(), me.getId())) {
+        if (!Objects.equals(project.getMember().getId(), me.getId())) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "내 프로젝트만 수정할 수 있습니다.", Map.of("projectId", projectId));
         }
 
@@ -164,7 +164,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
         ProjectENT project = projectRepo.findById(projectId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "프로젝트를 찾을 수 없습니다.", Map.of("projectId", projectId)));
 
-        if (!Objects.equals(project.getUserId(), me.getId())) {
+        if (!Objects.equals(project.getMember().getId(), me.getId())) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "내 프로젝트만 조회할 수 있습니다.", Map.of("projectId", projectId));
         }
 
