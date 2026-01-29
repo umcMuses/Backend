@@ -345,7 +345,7 @@ public class ProjectCTL {
     @Operation(
             summary = "5단계: 정산 서류 업로드 (다중)",
             description = """
-                    정산용 서류를 업로드합니다. (신분증, 통장 사본 등 여러 파일 가능)
+                    정산용 서류를 업로드합니다.
                     삭제할 첨부파일 ID 목록도 함께 전달할 수 있습니다.
                     
                     **응답 필드:**
@@ -369,6 +369,37 @@ public class ProjectCTL {
                 "projectId", projectId,
                 "documentUrls", documentUrls,
                 "message", "정산 서류 처리 완료",
+                "timestamp", LocalDateTime.now().toString()
+        ));
+    }
+
+    @Operation(
+            summary = "5단계: 메이커 서류 업로드 (다중)",
+            description = """
+                    메이커 관련 서류를 업로드합니다. (사업자등록증, 메이커 인증 서류 등 여러 파일 가능)
+                    삭제할 첨부파일 ID 목록도 함께 전달할 수 있습니다.
+                    
+                    **응답 필드:**
+                    - `projectId`: 프로젝트 ID
+                    - `documentUrls`: 업로드된 서류 URL 목록
+                    - `message`: 처리 결과 메시지
+                    - `timestamp`: 처리 시각
+                    """
+    )
+    @PostMapping(value = "/{projectId}/maker-documents", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<Map<String, Object>> uploadMakerDocuments(
+            @Parameter(description = "프로젝트 ID", required = true)
+            @PathVariable Long projectId,
+            @Parameter(description = "업로드할 파일 목록")
+            @RequestPart(value = "files", required = false) List<MultipartFile> files,
+            @Parameter(description = "삭제할 첨부파일 ID 목록")
+            @RequestParam(value = "deleteIds", required = false) List<Long> deleteIds
+    ) {
+        List<String> documentUrls = projectSRV.uploadMakerDocuments(projectId, files, deleteIds);
+        return ApiResponse.success(Map.of(
+                "projectId", projectId,
+                "documentUrls", documentUrls,
+                "message", "메이커 서류 처리 완료",
                 "timestamp", LocalDateTime.now().toString()
         ));
     }
