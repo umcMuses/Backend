@@ -508,7 +508,6 @@ public class ProjectSRVI implements ProjectSRV {
 
         // 상태 변경: DRAFT → PENDING
         project.updateStatus("PENDING");
-        project.updateFundingStatus(FundingStatus.SCHEDULED);
     }
 
     // ==================== 좋아요 ====================

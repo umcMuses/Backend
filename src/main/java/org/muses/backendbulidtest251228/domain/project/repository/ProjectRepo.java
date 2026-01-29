@@ -2,6 +2,7 @@ package org.muses.backendbulidtest251228.domain.project.repository;
 
 import org.muses.backendbulidtest251228.domain.project.entity.ProjectENT;
 import org.muses.backendbulidtest251228.domain.project.enums.FundingStatus;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -54,4 +55,6 @@ public interface ProjectRepo extends JpaRepository<ProjectENT, Long> {
     // ==================== 랜딩 페이지 관련 메서드 ====================
 
     List<ProjectENT> findTop6ByFundingStatusOrderBySupporterCountDesc(FundingStatus fundingStatus);
+
+    Page<ProjectENT> findByStatus(String status, Pageable pageable);
 }
