@@ -40,6 +40,7 @@ public interface ProjectSRV {
     // 5단계: 정보
     void saveInfo(Long projectId, InfoRequestDT request);
     List<String> uploadDocuments(Long projectId, List<MultipartFile> documents, List<Long> deleteIds);
+    List<String> uploadMakerDocuments(Long projectId, List<MultipartFile> documents, List<Long> deleteIds);
 
     // 프로젝트 제출
     void submitProject(Long projectId);

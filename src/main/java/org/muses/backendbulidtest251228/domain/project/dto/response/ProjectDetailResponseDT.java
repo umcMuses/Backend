@@ -95,6 +95,9 @@ public class ProjectDetailResponseDT {
     @Schema(description = "[5단계] 정산 서류 목록")
     private List<AttachmentResponseDT> documents;
 
+    @Schema(description = "[5단계] 메이커 서류 목록")
+    private List<AttachmentResponseDT> makerDocuments;
+
     // ========== 통계 ==========
     @Schema(description = "[통계] 목표 금액 대비 달성률 (%), 실시간 업데이트", example = "127")
     private Integer achieveRate;

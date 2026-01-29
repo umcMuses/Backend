@@ -138,6 +138,12 @@ public class ProjectSRVI implements ProjectSRV {
                 .map(AttachmentResponseDT::from)
                 .collect(Collectors.toList());
 
+        // 메이커 서류 조회
+        List<AttachmentResponseDT> makerDocuments = attachmentSRV.getAttachments("MAKER_DOC", projectId)
+                .stream()
+                .map(AttachmentResponseDT::from)
+                .collect(Collectors.toList());
+
         return ProjectDetailResponseDT.builder()
                 .projectId(project.getId())
                 .status(project.getStatus())
@@ -165,6 +171,7 @@ public class ProjectSRVI implements ProjectSRV {
                 .hostPhone(manager != null ? manager.getHostPhone() : null)
                 .hostBio(manager != null ? manager.getHostBio() : null)
                 .documents(documents)
+                .makerDocuments(makerDocuments)
                 // 통계
                 .achieveRate(project.getAchieveRate())
                 .supporterCount(project.getSupporterCount())
@@ -488,6 +495,36 @@ public class ProjectSRVI implements ProjectSRV {
                     .collect(Collectors.toList());
         }
         
+        return fileUrls;
+    }
+
+    @Override
+    @Transactional
+    public List<String> uploadMakerDocuments(Long projectId, List<MultipartFile> documents, List<Long> deleteIds) {
+        ProjectENT project = findProjectById(projectId);
+
+        // 본인 프로젝트인지 확인
+        Long currentMemberId = resolveCurrentMemberId();
+        if (!project.getMember().getId().equals(currentMemberId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "본인의 프로젝트만 수정할 수 있습니다.");
+        }
+
+        // 삭제할 첨부파일 DB에서 삭제 (실제 파일은 남겨둠)
+        if (deleteIds != null && !deleteIds.isEmpty()) {
+            for (Long attachmentId : deleteIds) {
+                attachmentSRV.deleteFromDb(attachmentId);
+            }
+        }
+
+        // 새 파일 업로드
+        List<String> fileUrls = new ArrayList<>();
+        if (documents != null && !documents.isEmpty()) {
+            List<AttachmentENT> attachments = attachmentSRV.uploadAll("MAKER_DOC", projectId, documents);
+            fileUrls = attachments.stream()
+                    .map(AttachmentENT::getFileUrl)
+                    .collect(Collectors.toList());
+        }
+
         return fileUrls;
     }
 
