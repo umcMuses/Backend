@@ -17,6 +17,19 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
 
     List<OrderENT> findByProjectIdAndStatus(Long projectId, OrderStatus status);
 
+    @Query("""
+    select distinct o
+    from OrderENT o
+    join fetch o.orderItems oi
+    where o.project.id = :projectId
+      and o.status = :status
+""")
+    List<OrderENT> findByProjectIdAndStatusFetchItems(
+            @Param("projectId") Long projectId,
+            @Param("status") OrderStatus status
+    );
+
+
 
 
     // 프로젝트 실패 처리: RESERVED -> VOID (펀딩 실패 무효)
