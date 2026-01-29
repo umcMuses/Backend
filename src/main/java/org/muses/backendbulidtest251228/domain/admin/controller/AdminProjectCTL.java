@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @Tag(name = "관리자 - 프로젝트 심사 및 관리", description = "관리자 - 프로젝트 심사 관련 API")
@@ -72,7 +73,7 @@ public class AdminProjectCTL {
 	@PatchMapping("/{projectId}/review")
 	public ApiResponse<String> reviewProject(
 		@PathVariable Long projectId,
-		@RequestBody AdminProjectDT.AuditReviewRequest request,
+		@RequestBody @Valid AdminProjectDT.AuditReviewRequest request,
 		@AuthenticationPrincipal PrincipalDetails principalDetails
 	) {
 		if (principalDetails == null) {

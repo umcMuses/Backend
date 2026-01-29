@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 
 import org.muses.backendbulidtest251228.domain.project.entity.ProjectENT;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -39,6 +41,8 @@ public class AdminProjectDT {
 	@NoArgsConstructor
 	@AllArgsConstructor
 	public static class AuditReviewRequest {
+		@NotBlank
+		@Pattern(regexp = "APPROVED|REJECTED")
 		private String status;			// APPROVED or REJECTED
 		private String rejectReason;	// 반려 사유 (확장성 고려)
 	}

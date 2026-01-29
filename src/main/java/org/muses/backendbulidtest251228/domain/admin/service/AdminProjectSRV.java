@@ -5,6 +5,7 @@ import org.muses.backendbulidtest251228.domain.admin.entity.ProjectAuditENT;
 import org.muses.backendbulidtest251228.domain.admin.enums.ProjectAuditStatus;
 import org.muses.backendbulidtest251228.domain.admin.repository.ProjectAuditRepo;
 import org.muses.backendbulidtest251228.domain.member.entity.Member;
+import org.muses.backendbulidtest251228.domain.member.enums.Role;
 import org.muses.backendbulidtest251228.domain.member.repository.MemberRepo;
 import org.muses.backendbulidtest251228.domain.project.dto.response.ProjectDetailResponseDT;
 import org.muses.backendbulidtest251228.domain.project.entity.ProjectENT;
@@ -63,9 +64,21 @@ public class AdminProjectSRV {
 		Member admin = memberRepo.findById(adminId)
 			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "관리자 정보를 찾을 수 없습니다."));
 
-		ProjectAuditStatus oldStatus = ProjectAuditStatus.valueOf(project.getStatus());
+		if (admin.getRole() != Role.ADMIN) {
+			throw new BusinessException(ErrorCode.FORBIDDEN, "관리자 권한이 필요합니다.");
+		}
+
+		ProjectAuditStatus oldStatus;
+		try {
+			oldStatus = ProjectAuditStatus.valueOf(project.getStatus());
+		} catch (IllegalArgumentException e) {
+			throw new BusinessException(ErrorCode.BAD_REQUEST, "프로젝트의 현재 상태가 유효하지 않습니다.");
+		}
 		ProjectAuditStatus newStatus;
 		try {
+			if (request.getStatus() == null) {
+				throw new BusinessException(ErrorCode.BAD_REQUEST, "상태 값이 필요합니다.");
+			}
 			newStatus = ProjectAuditStatus.valueOf(request.getStatus().toUpperCase());
 		} catch (IllegalArgumentException e) {
 			throw new BusinessException(ErrorCode.BAD_REQUEST, "잘못된 상태 값입니다.");
