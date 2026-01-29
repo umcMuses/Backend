@@ -38,11 +38,12 @@ public class AdminProjectCTL {
 
 	private final AdminProjectSRV adminProjectSRV;
 
-	@Operation(summary = "심사 프로젝트 목록 조회 API", description = "메이커가 제출한 프로젝트 생성 요청 심사 API")
+	@Operation(summary = "심사 프로젝트 목록 조회 API",
+		description = "<p>메이커가 제출한 프로젝트 생성 요청 심사 API\nstatus 파라미터가 없을 시, 전체 조회됩니다.</p>")
 	@GetMapping
 	public ApiResponse<List<AdminProjectDT.ProjectAuditListResponse>> getProjects(
 		@Parameter(description = "상태 필터 (DRAFT: 작성중, PENDING: 검토중, APPROVED: 승인됨, REJECTED: 반려됨)")
-		@RequestParam(defaultValue = "PENDING") ProjectAuditStatus status,
+		@RequestParam(required = false) ProjectAuditStatus status,
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size
 	) {
