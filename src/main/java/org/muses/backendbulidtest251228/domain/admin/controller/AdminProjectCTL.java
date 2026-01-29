@@ -1,6 +1,7 @@
 package org.muses.backendbulidtest251228.domain.admin.controller;
 
 import java.security.Principal;
+import java.util.List;
 
 import org.apache.ibatis.builder.BuilderException;
 import org.muses.backendbulidtest251228.domain.admin.dto.AdminProjectDT;
@@ -39,7 +40,7 @@ public class AdminProjectCTL {
 
 	@Operation(summary = "심사 프로젝트 목록 조회 API", description = "메이커가 제출한 프로젝트 생성 요청 심사 API")
 	@GetMapping
-	public ApiResponse<Page<AdminProjectDT.ProjectAuditListResponse>> getProjects(
+	public ApiResponse<List<AdminProjectDT.ProjectAuditListResponse>> getProjects(
 		@Parameter(description = "상태 필터 (DRAFT: 작성중, PENDING: 검토중, APPROVED: 승인됨, REJECTED: 반려됨)")
 		@RequestParam(defaultValue = "PENDING") ProjectAuditStatus status,
 		@RequestParam(defaultValue = "0") int page,
@@ -47,7 +48,15 @@ public class AdminProjectCTL {
 	) {
 		// 최신 생성 순으로 정렬
 		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-		return ApiResponse.success(adminProjectSRV.getProjectAuditList(status, pageable));
+
+		Page<AdminProjectDT.ProjectAuditListResponse> resultPage = adminProjectSRV.getProjectAuditList(status, pageable);
+		ApiResponse.PageInfo pageInfo = new ApiResponse.PageInfo(
+			resultPage.getNumber(),
+			resultPage.getSize(),
+			resultPage.getTotalElements()
+		);
+
+		return ApiResponse.success(resultPage.getContent(), pageInfo);
 	}
 
 	@Operation(summary = "프로젝트 상세 조회(관리자용) API", description = "메이커가 작성한 프로젝트 제출 상세 내용을 확인합니다.")
