@@ -27,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/admin/events")
 @RequiredArgsConstructor
-@Tag(name = "Admin - Event/Notice", description = "관리자 이벤트 관리 API")
+@Tag(name = "관리자 - 이벤트 관리", description = "관리자 이벤트 관리 API")
 public class AdminEventCTL {
 
 	private final AdminEventSRV adminEventSV;
