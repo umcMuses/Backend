@@ -45,135 +45,101 @@ public class PaymentOrchestrator {
 
 
     public boolean processOrderPayment(Long orderId) {
+        log.info("[PAY-START] 결제 프로세스 진입 | orderId: {}", orderId);
+
         // 1) 주문 선점
-        // row = 0 이면 즉시 종료, 이미 다른 프로세스가 잡음
         if (!orderTx.tryAcquirePaying(orderId)) {
-            log.info("[PAY] skip acquire | orderId={}", orderId);
+            log.warn("[PAY-SKIP] 주문 선점 실패 (이미 처리 중이거나 상태 부적절) | orderId: {}", orderId);
             return false;
         }
-
-        // 2) 주문
-        OrderENT order = orderREP.findByIdWithItems(orderId)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.NOT_FOUND,
-                        "주문을 찾을 수 없습니다.",
-                        Map.of("orderId", orderId)
-                ));
-
-
-        if (order.getStatus() != OrderStatus.PAYING) {
-            log.info("[PAY] status changed | orderId={} status={}", orderId, order.getStatus());
-            return false;
-        }
-
-
-
-        // 3) Payment 준비
-        String idemKey = "order:" + orderId; //고정, 식별자
-        PaymentENT payment = paymentTx.getOrCreate(orderId, idemKey, order.getTotalAmount());
-
-
-
-
-        String paymentOrderId = order.getPaymentOrderId();
-
-        if (paymentOrderId == null) {
-            paymentOrderId = "muses_order_" + orderId + "_" + UUID.randomUUID().toString().substring(0, 8);
-            orderTx.updatePaymentOrderId(order.getId(), paymentOrderId);
-            order.setPaymentOrderId(paymentOrderId); //  현재 객체에도 직접 세팅
-        }
-
-        if (payment.getStatus() == PaymentStatus.SUCCESS) {
-            orderTx.markPaidIfPaying(orderId);
-            return false;
-        }
-
-        paymentTx.markRequested(payment.getId());
-
-
-
-
-
-        BillingApproveResDT res = null;
-        Exception ex = null;
-
-        BillingAuthENT billingAuth = null;
-        RewardENT reward = null;
-
 
         try {
-            if (order.getOrderItems() == null || order.getOrderItems().isEmpty()) {
-                throw new BusinessException(
-                        ErrorCode.BAD_REQUEST,
-                        "주문 항목이 없습니다.",
-                        Map.of("orderId", orderId)
-                );
-            }
-            Long rewardId = order.getOrderItems().get(0).getRewardId();
-
-            billingAuth = billingAuthREP.findByOrder(order)
+            // 2) 주문 조회 및 검증
+            OrderENT order = orderREP.findByIdWithItems(orderId)
                     .orElseThrow(() -> new BusinessException(
-                            ErrorCode.BAD_REQUEST,
-                            "BillingAuth가 없습니다.",
+                            ErrorCode.NOT_FOUND,
+                            "주문을 찾을 수 없습니다.",
                             Map.of("orderId", orderId)
                     ));
 
-            reward = rewardRepo.findById(rewardId)
-                    .orElseThrow(() -> new BusinessException(
-                            ErrorCode.BAD_REQUEST,
-                            "존재하지 않는 리워드입니다.",
-                            Map.of("rewardId", rewardId)
-                    ));
+            if (order.getStatus() != OrderStatus.PAYING) {
+                log.warn("[PAY-ABORT] 주문 상태가 PAYING이 아님 | orderId: {}, currentStatus: {}", orderId, order.getStatus());
+                return false;
+            }
 
-            // 4) pg 호출
-            res = tossClient.approveWithBillingKey(
-                    billingAuth,
-                    payment.getAmount(),
-                    reward.getRewardName(),
-                    idemKey,
-                    paymentOrderId
-            );
+            // 3) Payment 준비
+            String idemKey = "order:" + orderId;
+            PaymentENT payment = paymentTx.getOrCreate(orderId, idemKey, order.getTotalAmount());
+            log.info("[PAY-PREPARE] Payment 레코드 생성/확인 | paymentId: {}, amount: {}", payment.getId(), payment.getAmount());
+
+            String paymentOrderId = order.getPaymentOrderId();
+            if (paymentOrderId == null) {
+                paymentOrderId = "muses_order_" + orderId + "_" + UUID.randomUUID().toString().substring(0, 8);
+                orderTx.updatePaymentOrderId(order.getId(), paymentOrderId);
+                order.setPaymentOrderId(paymentOrderId);
+                log.info("[PAY-ID-GEN] 신규 결제 주문번호 생성: {}", paymentOrderId);
+            }
+
+            if (payment.getStatus() == PaymentStatus.SUCCESS) {
+                log.info("[PAY-ALREADY-DONE] 이미 성공한 결제건입니다 | orderId: {}", orderId);
+                orderTx.markPaidIfPaying(orderId);
+                return true;
+            }
+
+            paymentTx.markRequested(payment.getId());
+            log.info("[PAY-REQUEST-PG] PG 승인 요청 준비 중... | paymentId: {}", payment.getId());
+
+            BillingApproveResDT res = null;
+            Exception ex = null;
+
+            try {
+                // 비즈니스 데이터 검증
+                if (order.getOrderItems() == null || order.getOrderItems().isEmpty()) {
+                    throw new BusinessException(ErrorCode.BAD_REQUEST, "주문 항목 누락", Map.of("orderId", orderId));
+                }
+
+                Long rewardId = order.getOrderItems().get(0).getRewardId();
+                BillingAuthENT billingAuth = billingAuthREP.findByOrder(order)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.BAD_REQUEST, "BillingAuth 누락"));
+
+                RewardENT reward = rewardRepo.findById(rewardId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.BAD_REQUEST, "리워드 정보 없음"));
+
+                // 4) PG 호출
+                log.info("[PG-CALL] Toss 승인 API 호출 시작 | idemKey: {}", idemKey);
+                res = tossClient.approveWithBillingKey(billingAuth, payment.getAmount(), reward.getRewardName(), idemKey, paymentOrderId);
+                log.info("[PG-RESPONSE] Toss 응답 수신 완료 | status: {}", res.getStatus());
+
+            } catch (Exception e) {
+                ex = e;
+                log.error("[PG-ERROR] PG 호출 중 예외 발생 | orderId: {}, msg: {}", orderId, e.getMessage());
+            }
+
+            // 5) 결과 반영
+            if (res != null && "DONE".equals(res.getStatus())) {
+                paymentTx.markSuccess(payment.getId(), res.getPaymentKey(), toJson(res));
+                orderTx.markPaidIfPaying(orderId);
+                log.info("[PAY-SUCCESS] 결제 최종 성공 처리 완료 | orderId: {}, paymentKey: {}", orderId, res.getPaymentKey());
+                return true;
+            }
+
+            // 실패 처리 로직
+            String reason = (res != null && res.getFailure() != null) ? res.getFailure().getMessage() : (ex != null ? ex.getMessage() : "PG 응답 없음");
+            paymentTx.markFailed(payment.getId(), reason, toJson(res));
+
+            int currentRetry = (order.getRetryCount() == null) ? 0 : order.getRetryCount();
+            int nextRetryCount = Math.min(currentRetry + 1, MAX_RETRY);
+            LocalDateTime nextRetryAt = LocalDateTime.now().plusMinutes(backoffMinutes(nextRetryCount));
+
+            orderTx.markFailedIfPaying(orderId, reason, nextRetryAt);
+            log.warn("[PAY-FAILED] 결제 실패 처리 (재시도 예정) | orderId: {}, 사유: {}, 다음시도: {}, 시도횟수: {}/{}",
+                    orderId, reason, nextRetryAt, nextRetryCount, MAX_RETRY);
+
         } catch (Exception e) {
-
-            ex = new BusinessException(
-                    ErrorCode.BAD_REQUEST,
-                    "PG 호출 중 오류가 발생했습니다.",
-                    Map.of("orderId", orderId)
-            );
-            log.warn("[PAY] PG call error | orderId={} msg={}", orderId, ex.getMessage(), ex);
+            log.error("[PAY-CRITICAL] 오케스트레이터 예상치 못한 오류 | orderId: {}", orderId, e);
         }
-
-
-        // 5) 결과 반영, 성공인 경우 여기서 끝낸다
-        if (res != null && "DONE".equals(res.getStatus())) {
-            order.setPaymentOrderId(paymentOrderId);
-            //결제 성공
-            paymentTx.markSuccess(payment.getId(), res.getPaymentKey(), toJson(res));
-            //주문 성공
-            orderTx.markPaidIfPaying(orderId);
-            log.info("[PAY] success | orderId={}", orderId);
-
-
-            return true;
-        }
-
-        String reason = (res != null && res.getFailure() != null && res.getFailure().getMessage() != null)
-                ? res.getFailure().getMessage()
-                : (ex != null ? ex.getMessage() : "PG 호출 실패");
-
-        paymentTx.markFailed(payment.getId(), reason, toJson(res));
-
-        int currentRetry = order.getRetryCount() == null ? 0 : order.getRetryCount();
-        int nextRetryCount = Math.min(currentRetry + 1, MAX_RETRY);
-        LocalDateTime nextRetryAt = LocalDateTime.now().plusMinutes(backoffMinutes(nextRetryCount));
-
-        orderTx.markFailedIfPaying(orderId, reason, nextRetryAt);
-        log.warn("[PAY] failed | orderId={} nextRetryAt={} reason={}", orderId, nextRetryAt, reason);
-
 
         return false;
-
-
     }
 
     private int backoffMinutes ( int retryCount1Based){

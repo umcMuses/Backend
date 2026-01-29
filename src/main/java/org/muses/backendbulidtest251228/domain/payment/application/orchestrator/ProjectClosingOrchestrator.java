@@ -76,14 +76,16 @@ public class ProjectClosingOrchestrator {
 
     public void processProject(Long projectId) {
 
+        log.info("[PROJECT-CLOSE-START] 프로젝트 마감 프로세스 시작 | ProjectID: {}", projectId);
 
 
         // 1) 프로젝트 선점 + 조회
         ProjectENT project = projectTx.tryAcquireClosingAndGet(projectId);
         if (project == null) {
-            log.info("[CLOSE] skip acquire | projectId={}", projectId);
+            log.warn("[PROJECT-CLOSE-SKIP] 프로젝트 선점 실패 (이미 처리 중이거나 대상 아님) | ProjectID: {}", projectId);
             return;
         }
+        log.info("[PROJECT-CLOSE-ACQUIRE] 프로젝트 선점 성공 | ProjectID: {}, Title: {}", projectId, project.getTitle());
 
 
 
@@ -94,10 +96,15 @@ public class ProjectClosingOrchestrator {
                 .map(OrderENT::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        log.info("[PROJECT-CLOSE-CHECK] 목표 금액: {}, 현재 예약 합계: {}, 예약 건수: {}건",
+                targetAmount, totalSumBefore, orderListBefore.size());
+
         // 2) 성공/실패 판정
         // 실패 흐름
         //totalSum 이 더 크면
-        if (totalSumBefore.compareTo(targetAmount) < 0) {
+        if (!project.isGoalAchieved()) {
+
+            log.info("[PROJECT-CLOSE-FAIL] 목표 달성 실패 처리 시작 | ProjectID: {}", projectId);
 
             // 목표 금액이 더 크면 즉, 실패하면
 
@@ -107,6 +114,8 @@ public class ProjectClosingOrchestrator {
 
             //  주문의 상태를 RESERVED는 VOID로 무효 처리
             orderTx.voidReservedByProject(projectId);
+            log.info("[PROJECT-CLOSE-VOID] 관련 주문 VOID 처리 완료");
+
 
 
             // 프로젝트 펀딩 상태를 실패로
@@ -114,6 +123,8 @@ public class ProjectClosingOrchestrator {
 
             // 여기서 해당 프로젝트에 주문한 사람들에게 각각 알림을 보낸다
             if (!memberIds.isEmpty()) {
+                log.info("[PROJECT-CLOSE-ALARM] 실패 알림 발송 대상: {}명", memberIds.size());
+
                 alarmSRVI.sendToMany(
                         memberIds,
                         5L, // alarm_id = 5 (펀딩 실패 템플릿)
@@ -129,17 +140,24 @@ public class ProjectClosingOrchestrator {
         }
 
 
+        log.info("[PROJECT-CLOSE-SUCCESS-FLOW] 목표 달성 성공! 결제 프로세스 진입 | ProjectID: {}", projectId);
 
 
         // 3) 성공 흐름: RESERVED 주문 결제
 
         // 프로젝트 ID 가 동일하고 아직 주문이 되지 않은 주문들 모으기
-        List<OrderENT> reserved = orderREP.findByProjectIdAndStatus(projectId, OrderStatus.RESERVED);
+        List<OrderENT> reserved = orderREP.findByProjectIdAndStatusFetchItems(projectId, OrderStatus.RESERVED);
+        log.info("[PROJECT-PAYMENT-BATCH] 결제 처리 시작 대상: {}건", reserved.size());
+
         for (OrderENT order : reserved) {
             try {
+                log.info("[PROJECT-PAYMENT-TRY] 결제 시도 | OrderID: {}, Amount: {}", order.getId(), order.getTotalAmount());
+
                 boolean  success = paymentOrchestrator.processOrderPayment(order.getId());
 
                 if(success){
+                    log.info("[PROJECT-PAYMENT-SUCCESS] 결제 성공 | OrderID: {}. 후속 작업(티켓/알림) 진행", order.getId());
+
                     for (OrderItemENT item : order.getOrderItems()) {
                         Long rewardId = item.getRewardId();
 
@@ -159,6 +177,8 @@ public class ProjectClosingOrchestrator {
                             );
                             continue;
                         }
+
+                        log.info("[PROJECT-TICKET-ISSUE] 티켓 발행 및 QR 알림 발송 | OrderItemID: {}", item.getId());
 
                         ticketIssueSRV.issueIfAbsent(item);
 
@@ -187,6 +207,7 @@ public class ProjectClosingOrchestrator {
 
 
         // QR 생성 및 QR 링크 생성
+        log.info("[PROJECT-CHECKIN-ISSUE] 프로젝트 체크인/QR 생성 시작");
 
         checkinIssueSRV.issueIfAbsent(project);
 
@@ -209,6 +230,7 @@ public class ProjectClosingOrchestrator {
 
         }else{
             // 모든 주문이 성공한 경우
+            log.info("[PROJECT-PAYMENT-COMPLETE] 모든 주문 결제 성공 완료");
 
         }
 
@@ -220,6 +242,9 @@ public class ProjectClosingOrchestrator {
         BigDecimal totalSum = orderList.stream()
                 .map(OrderENT::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        log.info("[SETTLEMENT-CALC] 정산 계산 시작 | 최종 PAID 합계: {}, 건수: {}건", totalSum, orderList.size());
+
 
         // 1. 수수료 및 지급액 계산 (공통)
         BigDecimal feeAmount = totalSum.multiply(new BigDecimal("0.1"))
@@ -251,6 +276,7 @@ public class ProjectClosingOrchestrator {
 
 
 
+        log.info("[PROJECT-CLOSE-END] 프로젝트 마감 프로세스 최종 종료 | ProjectID: {}", projectId);
 
 
 
