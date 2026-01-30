@@ -8,6 +8,8 @@ import org.muses.backendbulidtest251228.domain.mypage.dto.UpdateProfileImageResD
 import org.muses.backendbulidtest251228.domain.mypage.repository.MyPageMemberREP;
 import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
 import org.muses.backendbulidtest251228.global.businessError.BusinessException;
+import org.muses.backendbulidtest251228.domain.storage.entity.AttachmentENT;
+import org.muses.backendbulidtest251228.domain.storage.service.AttachmentSRV;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,11 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.UUID;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +26,10 @@ import java.util.Map;
 public class MyPageSRVI implements MyPageSRV {
 
     private final MyPageMemberREP memberREP;
+    private final AttachmentSRV attachmentSRV;
+
+    private static final String PROFILE_TARGET_TYPE = "member";
+    private static final Set<String> ALLOWED_EXT = Set.of("jpg", "jpeg", "png", "webp");
 
     @Override
     public MyProfileResDT getMe() {
@@ -70,15 +73,37 @@ public class MyPageSRVI implements MyPageSRV {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "이미지 파일이 필요합니다.");
         }
 
+        validateImageExtension(image);
+
         Member m = getCurrentMember();
 
-        String url = saveLocal(image);
+        // 프로필 이미지는 1개 유지: 기존 전부 삭제 후 업로드
+        attachmentSRV.deleteAll(PROFILE_TARGET_TYPE, m.getId());
+
+        AttachmentENT saved = attachmentSRV.upload(PROFILE_TARGET_TYPE, m.getId(), image);
+        String url = saved.getFileUrl();
 
         m.changeProfileImage(url);
 
         return UpdateProfileImageResDT.builder()
                 .profileImgUrl(url)
                 .build();
+    }
+
+    private void validateImageExtension(MultipartFile file) {
+        String original = file.getOriginalFilename();
+        if (original == null || !original.contains(".")) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "파일 확장자가 필요합니다.");
+        }
+        String ext = original.substring(original.lastIndexOf('.') + 1).toLowerCase();
+
+        if (!ALLOWED_EXT.contains(ext)) {
+            throw new BusinessException(
+                    ErrorCode.BAD_REQUEST,
+                    "허용되지 않는 이미지 확장자입니다.",
+                    Map.of("allowed", ALLOWED_EXT, "extension", ext)
+            );
+        }
     }
 
     private MyProfileResDT toResponse(Member m) {
@@ -140,31 +165,5 @@ public class MyPageSRVI implements MyPageSRV {
                 "principal에서 email을 찾을 수 없습니다.",
                 Map.of("principalClass", principal.getClass().getName())
         );
-    }
-
-    private String saveLocal(MultipartFile file) {
-        try {
-            Path uploadDir = Paths.get("uploads");
-            Files.createDirectories(uploadDir);
-
-            String original = file.getOriginalFilename();
-            String ext = "";
-            if (original != null && original.contains(".")) {
-                ext = original.substring(original.lastIndexOf('.'));
-            }
-
-            String savedName = UUID.randomUUID() + ext;
-            Path target = uploadDir.resolve(savedName);
-            file.transferTo(target.toFile());
-
-            return "/uploads/" + savedName;
-
-        } catch (Exception e) {
-            throw new BusinessException(
-                    ErrorCode.SERVER_ERROR,
-                    "이미지 저장 실패",
-                    Map.of("originalMessage", e.getMessage())
-            );
-        }
     }
 }
