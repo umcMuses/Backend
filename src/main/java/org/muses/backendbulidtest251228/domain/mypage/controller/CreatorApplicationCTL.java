@@ -23,7 +23,7 @@ public class CreatorApplicationCTL {
 
     private final CreatorApplicationSRV creatorApplicationSRV;
 
-    @Operation(summary = "크리에이터 전환 신청", description = "로그인한 사용자가 크리에이터 전환을 신청 (사용법 scehma 확인)")
+    @Operation(summary = "크리에이터 전환 신청", description = "로그인한 사용자가 크리에이터 전환을 신청 (사용법 schema 확인)")
     @PostMapping
     public ApiResponse<CreatorApplyResDT> apply(
             @AuthenticationPrincipal UserDetails userDetails,
