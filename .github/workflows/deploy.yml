@@ -21,6 +21,7 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew clean build -x test
+          ls -l build/libs/
 
       # JAR 파일을 EC2로 전송
       - name: Copy JAR to EC2
@@ -40,22 +41,31 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          script_stop: true
           envs: RDS_USERNAME, RDS_PASSWORD, JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, KAKAO_CLIENT_ID, KAKAO_CLIENT_SECRET, TOSS_SECRET_KEY
           script: |
-            
             mkdir -p /home/ubuntu/muses
             cd /home/ubuntu/muses
+            
+            # 기존 JAR 파일 정리
+            ls -t *.jar | tail -n +2 | xargs rm -f || true
             
             # 기존 프로세스 종료
             CURRENT_PID=$(pgrep -f "muses.*.jar")
             if [ -z "$CURRENT_PID" ]; then
-              echo "No running process"
+              echo "✅ 실행 중인 프로세스가 없습니다."
             else 
+              echo "🔄 기존 프로세스($CURRENT_PID)를 종료합니다."
               kill -15 $CURRENT_PID
-              sleep 5
+              for i in {1..10}; do
+                if ! ps -p $CURRENT_PID > /dev/null; then break; fi
+                sleep 1
+              done
+              kill -9 $CURRENT_PID 2>/dev/null || true
             fi
             
             # 실행
+            echo "🚀 서버를 실행합니다..."
             nohup java -jar /home/ubuntu/muses/*.jar \
               --spring.profiles.active=prod \
               --RDS_USERNAME=${{ secrets.RDS_USERNAME }} \
@@ -67,3 +77,12 @@ jobs:
               --KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }} \
               --TOSS_SECRET_KEY=${{ secrets.TOSS_SECRET_KEY }} \
               > /home/ubuntu/muses/app.log 2>&1 &
+            
+            sleep 2
+            if pgrep -f "muses.*.jar" > /dev/null; then
+              echo "✨ 배포 성공!"
+            else
+              echo "❌ 배포 실패! 로그를 확인하세요."
+              cat app.log
+              exit 1
+            fi
