@@ -6,8 +6,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.muses.backendbulidtest251228.domain.settlement.enums.SettlementStatus;
+import org.muses.backendbulidtest251228.domain.storage.dto.AttachmentResponseDT;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @Builder
@@ -37,4 +39,9 @@ public class SettlementListResDTO {
 
     @Schema(description = "프로젝트 제목", example = "뮤지컬 갈라 콘서트")
     private String title;
+
+    @Schema(description = "정산 서류 목록")
+    private List<AttachmentResponseDT> documents;
+
+
 }

@@ -6,6 +6,10 @@ import org.muses.backendbulidtest251228.domain.settlement.dto.SettlementListResD
 import org.muses.backendbulidtest251228.domain.settlement.entity.SettlementENT;
 import org.muses.backendbulidtest251228.domain.settlement.enums.SettlementStatus;
 import org.muses.backendbulidtest251228.domain.settlement.repository.SettlementRepo;
+import org.muses.backendbulidtest251228.domain.storage.dto.AttachmentResponseDT;
+import org.muses.backendbulidtest251228.domain.storage.entity.AttachmentENT;
+import org.muses.backendbulidtest251228.domain.storage.service.AttachmentSRV;
+import org.muses.backendbulidtest251228.domain.storage.service.AttachmentSRVI;
 import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
 import org.muses.backendbulidtest251228.global.businessError.BusinessException;
 import org.springframework.stereotype.Service;
@@ -13,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +25,8 @@ import java.util.Map;
 public class SettlementSRV {
 
     private final SettlementRepo settlementRepo;
+
+    private final AttachmentSRV attachmentSRV;
 
 
     public List<SettlementListResDTO> list(SettlementStatus status) {
@@ -36,13 +43,23 @@ public class SettlementSRV {
 
 
     private SettlementListResDTO toResDTO(SettlementENT settlement) {
+
+        Long projectId = settlement.getProject().getId();
+
+        List<AttachmentResponseDT> documents =
+                attachmentSRV.getAttachments("PROJECT_DOC", projectId)
+                        .stream()
+                        .map(AttachmentResponseDT::from)
+                        .toList();
+
         return SettlementListResDTO.builder()
+                .id(settlement.getId())
+                .title(settlement.getProject().getTitle())
                 .totalAmount(settlement.getTotalAmount())
                 .feeAmount(settlement.getFeeAmount())
                 .payoutAmount(settlement.getPayoutAmount())
                 .settlementStatus(settlement.getStatus())
-                .title(settlement.getProject().getTitle())
-                .id(settlement.getId())
+                .documents(documents)
                 .build();
     }
 

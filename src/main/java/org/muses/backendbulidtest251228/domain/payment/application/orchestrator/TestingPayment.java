@@ -57,8 +57,8 @@ public class TestingPayment {
 
     private final AlarmSRVI alarmSRVI;
 
-
-    @PostMapping("/test")
+// 테스트 용도
+   /* @PostMapping("/test")
     public ApiResponse<?> test(){
         log.info("[TEST API] Manual project process started for projectId=1000");
         processProject(1000L);
@@ -84,7 +84,7 @@ public class TestingPayment {
 
 
     }
-
+*/
 
 
     public void processProject(Long projectId) {
