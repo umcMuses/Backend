@@ -31,24 +31,32 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "build/libs/*.jar"
-          target: "home/ubuntu/muses"
+          target: "/home/ubuntu/muses"
           strip_components: 2
+          overwrite: true
 
       # EC2에서 기존 서버 죽이고 새 서버 실행
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
+        env:
+          RDS_USERNAME: ${{ secrets.RDS_USERNAME }}
+          RDS_PASSWORD: ${{ secrets.RDS_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          TOSS_SECRET_KEY: ${{ secrets.TOSS_SECRET_KEY }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          script_stop: true
-          envs: RDS_USERNAME, RDS_PASSWORD, JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, KAKAO_CLIENT_ID, KAKAO_CLIENT_SECRET, TOSS_SECRET_KEY
           script: |
             mkdir -p /home/ubuntu/muses
             cd /home/ubuntu/muses
             
-            # 기존 JAR 파일 정리
-            ls -t *.jar | tail -n +2 | xargs rm -f || true
+            echo "📁 JAR 파일 목록:"
+            ls -la /home/ubuntu/muses/*.jar || echo "JAR 파일이 없습니다!"
             
             # 기존 프로세스 종료
             CURRENT_PID=$(pgrep -f "muses.*.jar")
@@ -68,14 +76,14 @@ jobs:
             echo "🚀 서버를 실행합니다..."
             nohup java -jar /home/ubuntu/muses/*.jar \
               --spring.profiles.active=prod \
-              --RDS_USERNAME=${{ secrets.RDS_USERNAME }} \
-              --RDS_PASSWORD=${{ secrets.RDS_PASSWORD }} \
-              --JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              --GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
-              --KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }} \
-              --KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }} \
-              --TOSS_SECRET_KEY=${{ secrets.TOSS_SECRET_KEY }} \
+              --RDS_USERNAME="$RDS_USERNAME" \
+              --RDS_PASSWORD="$RDS_PASSWORD" \
+              --JWT_SECRET="$JWT_SECRET" \
+              --GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
+              --GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" \
+              --KAKAO_CLIENT_ID="$KAKAO_CLIENT_ID" \
+              --KAKAO_CLIENT_SECRET="$KAKAO_CLIENT_SECRET" \
+              --TOSS_SECRET_KEY="$TOSS_SECRET_KEY" \
               > /home/ubuntu/muses/app.log 2>&1 &
             
             sleep 2
