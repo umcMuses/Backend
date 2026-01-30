@@ -1,9 +1,7 @@
 package org.muses.backendbulidtest251228.domain.mypage.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.*;
 import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
 import org.muses.backendbulidtest251228.domain.payment.enums.PaymentStatus;
 
@@ -13,23 +11,32 @@ import java.util.List;
 
 public class MyOrderHistoryResDT {
 
-    // 목록
     @Getter
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
+    @Schema(description = "주문내역 목록 아이템")
     public static class OrderHistoryItem {
+
+        @Schema(description = "주문 ID", example = "101")
         private Long orderId;
+
+        @Schema(description = "프로젝트 제목", example = "푸른 오렌지 재즈 콘서트")
         private String projectTitle;
 
-        // 배지/상태
+        @Schema(description = "주문 상태", example = "PAID")
         private OrderStatus orderStatus;
+
+        @Schema(description = "결제 상태", example = "SUCCESS")
         private PaymentStatus paymentStatus;
 
-        // 금액
+        @Schema(description = "결제 금액", example = "59000")
         private BigDecimal amount;
 
-        // 리스트 우측 날짜: 결제 승인일시 우선, 없으면 주문 생성일시
+        @Schema(
+                description = "리스트에 표시할 날짜(결제 승인일시 우선, 없으면 주문 생성일시)",
+                example = "2026-01-30T15:00:00"
+        )
         private LocalDateTime displayDate;
     }
 
@@ -37,34 +44,53 @@ public class MyOrderHistoryResDT {
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
+    @Schema(description = "주문내역 목록 응답")
     public static class OrderHistoryListResponse {
+        @Schema(description = "주문 리스트")
         private List<OrderHistoryItem> items;
     }
 
-    // 상세
     @Getter
     @Builder
     @AllArgsConstructor
     @NoArgsConstructor
+    @Schema(description = "주문내역 상세 응답")
     public static class OrderHistoryDetailResponse {
+
+        @Schema(description = "주문 ID", example = "101")
         private Long orderId;
 
-        // 상단 카드
-        private String projectTitle;          // 공연명(프로젝트명)
-        private LocalDateTime opening;        // 일시 (projects.opening)
-        private String locationDetail;        // 장소 상세 (project_contents.location_detail)
+        @Schema(description = "프로젝트명", example = "푸른 오렌지 재즈 콘서트")
+        private String projectTitle;
 
-        private String optionTitle;           // 옵션명(리워드명)
-        private String optionDescription;     // 옵션 설명(리워드 설명)
-        private Integer quantity;             // 수량
+        @Schema(description = "공연/행사 시작 일시(projects.opening)", example = "2026-02-10T18:00:00")
+        private LocalDateTime opening;
 
-        // 결제 영역
-        private LocalDateTime paidAt;         // 결제일시 (payments.approved_at)
-        private String paymentProvider;       // 결제수단(토스페이먼츠 등)
-        private BigDecimal amount;            // 결제금액
+        @Schema(description = "장소 상세(project_contents.location_detail)", example = "홍대입구역 2번 출구 인근")
+        private String locationDetail;
 
-        // 상태
+        @Schema(description = "옵션/리워드명", example = "VIP 티켓")
+        private String optionTitle;
+
+        @Schema(description = "옵션/리워드 설명", example = "앞좌석 + 굿즈 제공")
+        private String optionDescription;
+
+        @Schema(description = "수량", example = "2")
+        private Integer quantity;
+
+        @Schema(description = "결제 승인 일시(payments.approved_at)", example = "2026-01-30T15:00:00")
+        private LocalDateTime paidAt;
+
+        @Schema(description = "결제수단/PG", example = "TOSS_PAYMENTS")
+        private String paymentProvider;
+
+        @Schema(description = "결제금액", example = "118000")
+        private BigDecimal amount;
+
+        @Schema(description = "주문 상태", example = "PAID")
         private OrderStatus orderStatus;
+
+        @Schema(description = "결제 상태", example = "SUCCESS")
         private PaymentStatus paymentStatus;
     }
 }

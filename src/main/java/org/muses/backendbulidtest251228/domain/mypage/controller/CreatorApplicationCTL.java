@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.multipart.MultipartFile;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.List;
 
@@ -21,7 +23,7 @@ public class CreatorApplicationCTL {
 
     private final CreatorApplicationSRV creatorApplicationSRV;
 
-    @Operation(summary = "크리에이터 전환 신청", description = "로그인한 사용자가 크리에이터 전환을 신청")
+    @Operation(summary = "크리에이터 전환 신청", description = "로그인한 사용자가 크리에이터 전환을 신청 (사용법 scehma 확인)")
     @PostMapping
     public ApiResponse<CreatorApplyResDT> apply(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -44,11 +46,24 @@ public class CreatorApplicationCTL {
 
     // 서류 업로드/조회/제출
 
-    @Operation(summary = "전환 신청 서류 업로드", description = "docType + file multipart 업로드.")
+    @Operation(summary = "전환 신청 서류 업로드", description = "docType + file를 함께 전송. 크리에이터 전환 신청을 위해 증빙 서류를 업로드")
     @PostMapping(value = "/me/docs", consumes = "multipart/form-data")
     public ApiResponse<CreatorApplicationDocResDT> uploadDoc(
             @AuthenticationPrincipal UserDetails userDetails,
+            @Parameter(
+                    description = """
+                업로드하는 서류 종류
+                가능한 값: ID_CARD(개인/개인사업자/법인사업자-신분증 사본), BANKBOOK(개인/개인사업자/법인사업자-통장 사본), BRC(개인사업자/법인사업자-사업자등록증), COMP_REGISTRY(법인사업자-법인등기부등본), COMP_SEAL(법인사업자-법인 인감증명서)
+                """,
+                    required = true,
+                    schema = @Schema(type = "string", example = "ID_CARD")
+            )
             @RequestPart("docType") String docType,
+
+            @Parameter(
+                    description = "업로드할 파일",
+                    required = true
+            )
             @RequestPart("file") MultipartFile file
     ) {
         return ApiResponse.success(creatorApplicationSRV.uploadDoc(userDetails, docType, file));

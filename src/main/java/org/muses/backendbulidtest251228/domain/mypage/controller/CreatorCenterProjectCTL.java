@@ -1,7 +1,7 @@
 package org.muses.backendbulidtest251228.domain.mypage.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorCenterProjectDT.*;
+import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorCenterProjectResDT.*;
 import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorCenterProjectReqDT;
 import org.muses.backendbulidtest251228.domain.mypage.service.CreatorCenterProjectSRV;
 import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
