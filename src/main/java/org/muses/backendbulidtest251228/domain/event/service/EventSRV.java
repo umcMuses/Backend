@@ -46,7 +46,7 @@ public class EventSRV {
 
     public ApiResponse<EventResDTO> getEventDetail(Long eventId) {
 
-        Event event = eventRepo.findById(eventId)
+        Event event = eventRepo.findPublishedById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "해당 이벤트를 찾을 수 없습니다."));
 
         EventResDTO dto = new EventResDTO(
