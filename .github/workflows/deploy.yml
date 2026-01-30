@@ -42,7 +42,11 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: RDS_USERNAME, RDS_PASSWORD, JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, KAKAO_CLIENT_ID, KAKAO_CLIENT_SECRET, TOSS_SECRET_KEY
           script: |
+            
+            mkdir -p /home/ubuntu/muses
             cd /home/ubuntu/muses
+            
+            # 기존 프로세스 종료
             CURRENT_PID=$(pgrep -f "muses.*.jar")
             if [ -z "$CURRENT_PID" ]; then
               echo "No running process"
@@ -51,6 +55,7 @@ jobs:
               sleep 5
             fi
             
+            # 실행
             nohup java -jar /home/ubuntu/muses/*.jar \
               --spring.profiles.active=prod \
               --RDS_USERNAME=${{ secrets.RDS_USERNAME }} \
