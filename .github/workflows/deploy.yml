@@ -66,31 +66,26 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
+          envs: RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,KAKAO_CLIENT_ID,KAKAO_CLIENT_SECRET,TOSS_SECRET_KEY
           script: |
+            set +e
             mkdir -p /home/ubuntu/muses
             cd /home/ubuntu/muses
             
-            echo "📁 JAR 파일 목록:"
-            ls -la /home/ubuntu/muses/*.jar || echo "JAR 파일이 없습니다!"
+            echo "📁 JAR 파일 확인:"
+            ls -lh /home/ubuntu/muses/*.jar
             
             # 기존 프로세스 종료
             echo "🔄 기존 프로세스 확인 중..."
-            CURRENT_PID=$(pgrep -f ".*\.jar" || true)
-            if [ -n "$CURRENT_PID" ]; then
-              echo "🔄 기존 프로세스($CURRENT_PID)를 종료합니다."
-              kill -15 $CURRENT_PID 2>/dev/null || true
-              sleep 5
-              kill -9 $CURRENT_PID 2>/dev/null || true
-              sleep 2
-            else
-              echo "✅ 실행 중인 프로세스가 없습니다."
-            fi
+            CURRENT_PID=$(pgrep -f "backend-bulidtest" 2>/dev/null)
+            echo "🔄 기존 프로세스($CURRENT_PID) 종료 시도..."
+            sudo pkill -15 -f "muses.*.jar" || true
+            sleep 5
             
-            if pgrep -f ".*\.jar" > /dev/null 2>&1; then
-              echo "⚠️ 프로세스가 아직 실행 중입니다. 강제 종료..."
-              pkill -9 -f ".*\.jar" || true
-              sleep 2
-            fi
+            sudo pkill -9 -f "muses.*.jar" || true
+            sleep 2
+            
+            fuser -k 8080/tcp || true
             
             # 실행
             echo "🚀 서버를 실행합니다..."
@@ -106,7 +101,9 @@ jobs:
               --TOSS_SECRET_KEY="$TOSS_SECRET_KEY" \
               > /home/ubuntu/muses/app.log 2>&1 &
             
-            sleep 2
+            disown
+            sleep 5
+            
             if pgrep -f "muses.*.jar" > /dev/null; then
               echo "✨ 배포 성공!"
             else
