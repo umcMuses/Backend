@@ -68,38 +68,82 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,KAKAO_CLIENT_ID,KAKAO_CLIENT_SECRET,TOSS_SECRET_KEY
           script: |
-            mkdir -p /home/ubuntu/muses
+            # 배포 스크립트 생성
+            cat > /home/ubuntu/muses/deploy.sh << 'DEPLOY_SCRIPT'
+            #!/bin/bash
             cd /home/ubuntu/muses
             
-            echo "📁 JAR 파일 확인:"
-            ls -lh *.jar
+            # 기존 프로세스 PID 파일로 관리
+            if [ -f app.pid ]; then
+              OLD_PID=$(cat app.pid)
+              if ps -p $OLD_PID > /dev/null 2>&1; then
+                echo "🔄 기존 프로세스($OLD_PID) 종료 중..."
+                kill $OLD_PID 2>/dev/null
+                sleep 5
+                kill -9 $OLD_PID 2>/dev/null || true
+              fi
+              rm -f app.pid
+            fi
             
-            # 기존 프로세스 종료
-            echo "🔄 기존 프로세스 강제 종료 중..."
-            sudo fuser -k 8080/tcp || true
-            sudo pkill -9 -f "muses.*.jar" || true
-            sleep 3
+            # 추가로 8080 포트 사용 프로세스 확인
+            PORT_PID=$(lsof -t -i:8080 2>/dev/null || true)
+            if [ -n "$PORT_PID" ]; then
+              echo "🔄 8080 포트 사용 프로세스($PORT_PID) 종료 중..."
+              kill $PORT_PID 2>/dev/null || true
+              sleep 3
+            fi
+            
+            sleep 2
             
             # 실행
             echo "🚀 서버를 실행합니다..."
             nohup java -jar /home/ubuntu/muses/*.jar \
               --spring.profiles.active=prod \
-              --RDS_USERNAME="${RDS_USERNAME}" \
-              --RDS_PASSWORD="${RDS_PASSWORD}" \
-              --JWT_SECRET="${JWT_SECRET}" \
-              --GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}" \
-              --GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}" \
-              --KAKAO_CLIENT_ID="${KAKAO_CLIENT_ID}" \
-              --KAKAO_CLIENT_SECRET="${KAKAO_CLIENT_SECRET}" \
-              --TOSS_SECRET_KEY="${TOSS_SECRET_KEY}" \
-              > app.log 2>&1 &
+              --RDS_USERNAME="$1" \
+              --RDS_PASSWORD="$2" \
+              --JWT_SECRET="$3" \
+              --GOOGLE_CLIENT_ID="$4" \
+              --GOOGLE_CLIENT_SECRET="$5" \
+              --KAKAO_CLIENT_ID="$6" \
+              --KAKAO_CLIENT_SECRET="$7" \
+              --TOSS_SECRET_KEY="$8" \
+              > /home/ubuntu/muses/app.log 2>&1 &
             
-            sleep 10
+            echo $! > app.pid
+            echo "✅ 서버 시작됨 (PID: $(cat app.pid))"
+            DEPLOY_SCRIPT
             
-            if pgrep -f "muses.*.jar" > /dev/null; then
-              echo "✨ 배포 성공! (PID: $(pgrep -f "muses.*.jar" | head -n 1))"
-            else
-              echo "❌ 배포 실패! 로그를 확인하세요."
-              tail -n 30 app.log
-              exit 1
-            fi
+            chmod +x /home/ubuntu/muses/deploy.sh
+            
+            # 스크립트를 백그라운드로 실행하고 즉시 종료
+            nohup /home/ubuntu/muses/deploy.sh "$RDS_USERNAME" "$RDS_PASSWORD" "$JWT_SECRET" "$GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_SECRET" "$KAKAO_CLIENT_ID" "$KAKAO_CLIENT_SECRET" "$TOSS_SECRET_KEY" > /home/ubuntu/muses/deploy.log 2>&1 &
+            
+            sleep 3
+            echo "📋 배포 스크립트 실행 완료"
+            
+            - name: Verify deployment
+              uses: appleboy/ssh-action@master
+              with:
+                host: ${{ secrets.EC2_HOST }}
+                username: ubuntu
+                key: ${{ secrets.EC2_SSH_KEY }}
+                script: |
+                  sleep 10
+                  echo "📋 배포 로그:"
+                  cat /home/ubuntu/muses/deploy.log
+
+                  echo ""
+                  echo "📋 앱 로그 (최근 30줄):"
+                  tail -30 /home/ubuntu/muses/app.log
+
+                  echo ""
+                  if [ -f /home/ubuntu/muses/app.pid ]; then
+                    PID=$(cat /home/ubuntu/muses/app.pid)
+                    if ps -p $PID > /dev/null 2>&1; then
+                      echo "✨ 배포 성공! (PID: $PID)"
+                      exit 0
+                    fi
+                  fi
+
+                  echo "❌ 배포 실패!"
+                  exit 1
