@@ -68,46 +68,38 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,KAKAO_CLIENT_ID,KAKAO_CLIENT_SECRET,TOSS_SECRET_KEY
           script: |
-            set +e
             mkdir -p /home/ubuntu/muses
             cd /home/ubuntu/muses
             
             echo "📁 JAR 파일 확인:"
-            ls -lh /home/ubuntu/muses/*.jar
+            ls -lh .jar
             
             # 기존 프로세스 종료
-            echo "🔄 기존 프로세스 확인 중..."
-            CURRENT_PID=$(pgrep -f "backend-bulidtest" 2>/dev/null)
-            echo "🔄 기존 프로세스($CURRENT_PID) 종료 시도..."
-            sudo pkill -15 -f "muses.*.jar" || true
-            sleep 5
-            
+            echo "🔄 기존 프로세스 강제 종료 중..."
+            sudo fuser -k 8080/tcp || true
             sudo pkill -9 -f "muses.*.jar" || true
-            sleep 2
-            
-            fuser -k 8080/tcp || true
+            sleep 3
             
             # 실행
             echo "🚀 서버를 실행합니다..."
             nohup java -jar /home/ubuntu/muses/*.jar \
               --spring.profiles.active=prod \
-              --RDS_USERNAME="$RDS_USERNAME" \
-              --RDS_PASSWORD="$RDS_PASSWORD" \
-              --JWT_SECRET="$JWT_SECRET" \
-              --GOOGLE_CLIENT_ID="$GOOGLE_CLIENT_ID" \
-              --GOOGLE_CLIENT_SECRET="$GOOGLE_CLIENT_SECRET" \
-              --KAKAO_CLIENT_ID="$KAKAO_CLIENT_ID" \
-              --KAKAO_CLIENT_SECRET="$KAKAO_CLIENT_SECRET" \
-              --TOSS_SECRET_KEY="$TOSS_SECRET_KEY" \
-              > /home/ubuntu/muses/app.log 2>&1 &
+              --RDS_USERNAME="${RDS_USERNAME}" \
+              --RDS_PASSWORD="${RDS_PASSWORD}" \
+              --JWT_SECRET="${JWT_SECRET}" \
+              --GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}" \
+              --GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}" \
+              --KAKAO_CLIENT_ID="${KAKAO_CLIENT_ID}" \
+              --KAKAO_CLIENT_SECRET="${KAKAO_CLIENT_SECRET}" \
+              --TOSS_SECRET_KEY="${TOSS_SECRET_KEY}" \
+              > app.log 2>&1 &
             
-            disown
-            sleep 5
+            sleep 10
             
             if pgrep -f "muses.*.jar" > /dev/null; then
-              echo "✨ 배포 성공!"
+              echo "✨ 배포 성공! (PID: $(pgrep -f "muses.*.jar" | head -n 1))"
             else
               echo "❌ 배포 실패! 로그를 확인하세요."
-              cat app.log
+              tail -n 30 app.log
               exit 1
             fi
