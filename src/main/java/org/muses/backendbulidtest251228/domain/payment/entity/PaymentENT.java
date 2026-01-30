@@ -34,6 +34,7 @@ public class PaymentENT {
     @Column(name = "idem_key")
     private String idemKey;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     private PaymentStatus status;
 

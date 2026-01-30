@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/order")
+@RequestMapping("/api/orders")
 @Tag(name = "Order", description = "주문 생성/취소 API")
 public class OrderCTL {
 
@@ -46,7 +46,7 @@ public class OrderCTL {
                 결제 진행에 필요한 customerKey와 성공/실패 URL을 반환합니다.
                 """
          )
-    @GetMapping("/prepare")
+    @PostMapping("/prepare")
     public ApiResponse<OrderCreateResDT> createOrder(
             @Valid @org.springframework.web.bind.annotation.RequestBody OrderCreateReqDT req,
             @AuthenticationPrincipal UserDetails userDetails
@@ -87,9 +87,9 @@ public class OrderCTL {
             summary = "주문 취소 (전체 취소)",
             description = "해당 주문 전체를 취소하고 빌링키를 삭제합니다"
     )
-    @DeleteMapping("/cancel/all")
+    @DeleteMapping("/cancel/all/{orderId}")
     public ApiResponse<?> cancelAllOrder(@Parameter(description = "취소할 주문 ID", example = "1")
-                                      @RequestParam("orderId") Long orderId){
+                                             @PathVariable("orderId") Long orderId){
 
         orderSRV.cancel(orderId);
 
