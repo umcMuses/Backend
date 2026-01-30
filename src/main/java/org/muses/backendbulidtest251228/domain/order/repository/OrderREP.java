@@ -20,14 +20,18 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
     @Query("""
     select distinct o
     from OrderENT o
+    join fetch o.member m
+    join fetch o.project p
     join fetch o.orderItems oi
-    where o.project.id = :projectId
+    where p.id = :projectId
       and o.status = :status
 """)
     List<OrderENT> findByProjectIdAndStatusFetchItems(
             @Param("projectId") Long projectId,
             @Param("status") OrderStatus status
     );
+
+
 
 
 
