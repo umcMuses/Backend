@@ -1,0 +1,64 @@
+name: Muses Backend CI/CD
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # Gradle 빌드
+      - name: Build with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build -x test
+
+      # JAR 파일을 EC2로 전송
+      - name: Copy JAR to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "build/libs/*.jar"
+          target: "home/ubuntu/muses"
+          strip_components: 2
+
+      # EC2에서 기존 서버 죽이고 새 서버 실행
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: RDS_USERNAME, RDS_PASSWORD, JWT_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, KAKAO_CLIENT_ID, KAKAO_CLIENT_SECRET, TOSS_SECRET_KEY
+          script: |
+            cd /home/ubuntu/muses
+            CURRENT_PID=$(pgrep -f "muses.*.jar")
+            if [ -z "$CURRENT_PID" ]; then
+              echo "No running process"
+            else 
+              kill -15 $CURRENT_PID
+              sleep 5
+            fi
+            
+            nohup java -jar /home/ubuntu/muses/*.jar \
+              --spring.profiles.active=prod \
+              --RDS_USERNAME=${{ secrets.RDS_USERNAME }} \
+              --RDS_PASSWORD=${{ secrets.RDS_PASSWORD }} \
+              --JWT_SECRET=${{ secrets.JWT_SECRET }} \
+              --GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }} \
+              --KAKAO_CLIENT_ID=${{ secrets.KAKAO_CLIENT_ID }} \
+              --KAKAO_CLIENT_SECRET=${{ secrets.KAKAO_CLIENT_SECRET }} \
+              --TOSS_SECRET_KEY=${{ secrets.TOSS_SECRET_KEY }} \
+              > /home/ubuntu/muses/app.log 2>&1 &
