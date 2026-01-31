@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 @Tag(
@@ -107,6 +108,25 @@ public class CheckinCTL {
                 .contentType(MediaType.IMAGE_PNG)
                 .cacheControl(CacheControl.noStore())
                 .body(png);
+    }
+
+    @Operation(
+            summary = "티켓 토큰 조회",
+            description = "티켓 ID를 통해 체크인에 사용되는 ticketToken을 조회합니다."
+    )
+    @GetMapping("/tickets/{ticketId}")
+    public ApiResponse<Map<String, Object>> getToken(
+            @PathVariable Long ticketId
+    ) {
+        TicketENT ticket = ticketRepo.findById(ticketId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 티켓"));
+
+        String ticketToken = ticket.getTicketToken();
+
+
+        return ApiResponse.success(Map.of(
+                "ticketToken", ticketToken
+        ));
     }
 
 
