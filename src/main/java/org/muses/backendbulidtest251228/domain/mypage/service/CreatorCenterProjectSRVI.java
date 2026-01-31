@@ -3,7 +3,7 @@ package org.muses.backendbulidtest251228.domain.mypage.service;
 import lombok.RequiredArgsConstructor;
 import org.muses.backendbulidtest251228.domain.member.entity.Member;
 import org.muses.backendbulidtest251228.domain.member.repository.MemberRepo;
-import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorCenterProjectDT;
+import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorCenterProjectResDT;
 import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorCenterProjectReqDT;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.orderItem.entity.OrderItemENT;
@@ -42,7 +42,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
     private final RewardRepo rewardRepo;
 
     @Override
-    public CreatorCenterProjectDT.MyProjectListResponse getMyProjects(UserDetails userDetails) {
+    public CreatorCenterProjectResDT.MyProjectListResponse getMyProjects(UserDetails userDetails) {
         Member me = resolveMember(userDetails);
 
         // 레포에 OrderBy 메서드 없을 수 있으니, 일단 가져와서 자바에서 정렬
@@ -50,7 +50,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
                 .sorted(Comparator.comparing(ProjectENT::getCreatedAt).reversed())
                 .toList();
 
-        List<CreatorCenterProjectDT.MyProjectItem> items = projects.stream()
+        List<CreatorCenterProjectResDT.MyProjectItem> items = projects.stream()
                 .map(p -> {
                     int dDay = calcDDay(p.getDeadline());
 
@@ -69,7 +69,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
                                 .divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP);
                     }
 
-                    return CreatorCenterProjectDT.MyProjectItem.builder()
+                    return CreatorCenterProjectResDT.MyProjectItem.builder()
                             .projectId(p.getId())
                             .title(p.getTitle())
                             .fundingStatus(p.getFundingStatus())
@@ -81,13 +81,13 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
                 })
                 .toList();
 
-        return CreatorCenterProjectDT.MyProjectListResponse.builder()
+        return CreatorCenterProjectResDT.MyProjectListResponse.builder()
                 .items(items)
                 .build();
     }
 
     @Override
-    public CreatorCenterProjectDT.ProjectSettingsResponse getProjectSettings(UserDetails userDetails, Long projectId) {
+    public CreatorCenterProjectResDT.ProjectSettingsResponse getProjectSettings(UserDetails userDetails, Long projectId) {
         Member me = resolveMember(userDetails);
 
         ProjectENT project = projectRepo.findById(projectId)
@@ -103,7 +103,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
                 .filter(Objects::nonNull)
                 .toList();
 
-        return CreatorCenterProjectDT.ProjectSettingsResponse.builder()
+        return CreatorCenterProjectResDT.ProjectSettingsResponse.builder()
                 .projectId(project.getId())
                 .description(project.getDescription())
                 .tags(tags)
@@ -114,7 +114,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
 
     @Override
     @Transactional
-    public CreatorCenterProjectDT.ProjectSettingsResponse updateProjectSettings(
+    public CreatorCenterProjectResDT.ProjectSettingsResponse updateProjectSettings(
             UserDetails userDetails,
             Long projectId,
             CreatorCenterProjectReqDT.UpdateProjectSettingsRequest request
@@ -158,7 +158,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
     }
 
     @Override
-    public CreatorCenterProjectDT.MakerListResponse getProjectMakers(UserDetails userDetails, Long projectId) {
+    public CreatorCenterProjectResDT.MakerListResponse getProjectMakers(UserDetails userDetails, Long projectId) {
         Member me = resolveMember(userDetails);
 
         ProjectENT project = projectRepo.findById(projectId)
@@ -171,7 +171,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
         // 이 메서드가 OrderREP에 없으면 레포에 JPQL로 추가
         List<OrderENT> orders = orderREP.findPaidOrdersWithItemsByProjectId(projectId);
 
-        List<CreatorCenterProjectDT.MakerRow> rows = new ArrayList<>();
+        List<CreatorCenterProjectResDT.MakerRow> rows = new ArrayList<>();
 
         for (OrderENT o : orders) {
             Member maker = o.getMember();
@@ -189,7 +189,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
                 RewardENT reward = (rewardId == null) ? null : rewardRepo.findById(rewardId).orElse(null);
                 String rewardName = (reward == null) ? null : reward.getRewardName();
 
-                rows.add(CreatorCenterProjectDT.MakerRow.builder()
+                rows.add(CreatorCenterProjectResDT.MakerRow.builder()
                         .memberId(memberId)
                         .nickname(nickname)
                         .name(name)
@@ -202,7 +202,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
             }
         }
 
-        return CreatorCenterProjectDT.MakerListResponse.builder()
+        return CreatorCenterProjectResDT.MakerListResponse.builder()
                 .projectId(projectId)
                 .items(rows)
                 .build();

@@ -40,7 +40,7 @@ public class OrderCTL {
 
     // 결제 버튼 누르면: customerKey + success/fail 내려주기
     @Operation(
-            summary = "주문 준비 (RESERVED 주문 생성)",
+            summary = "주문 준비",
             description = """
                 응원하기 버튼 클릭 시 주문(RESERVED)을 생성합니다.
                 결제 진행에 필요한 customerKey와 성공/실패 URL을 반환합니다.
