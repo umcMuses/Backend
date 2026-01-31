@@ -62,11 +62,14 @@ jobs:
           KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
           KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
           TOSS_SECRET_KEY: ${{ secrets.TOSS_SECRET_KEY }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
-          envs: RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,KAKAO_CLIENT_ID,KAKAO_CLIENT_SECRET,TOSS_SECRET_KEY
+          envs: RDS_USERNAME,RDS_PASSWORD,JWT_SECRET,GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET,KAKAO_CLIENT_ID,KAKAO_CLIENT_SECRET,TOSS_SECRET_KEY, AWS_ACCESS_KEY, AWS_SECRET_KEY, S3_BUCKET_NAME
           script: |
             # 배포 스크립트 생성
             cat > /home/ubuntu/muses/deploy.sh << 'DEPLOY_SCRIPT'
@@ -107,6 +110,9 @@ jobs:
               --KAKAO_CLIENT_ID="$6" \
               --KAKAO_CLIENT_SECRET="$7" \
               --TOSS_SECRET_KEY="$8" \
+              --AWS_ACCESS_KEY="$9" \
+              --AWS_SECRET_KEY="$10" \
+              --S3_BUCKET_NAME="$11" \
               > /home/ubuntu/muses/app.log 2>&1 &
             
             echo $! > app.pid

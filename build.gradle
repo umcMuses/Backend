@@ -67,6 +67,10 @@ dependencies {
     // QR
     implementation 'com.google.zxing:core:3.5.4'
     implementation 'com.google.zxing:javase:3.5.4'
+
+    // AWS S3 (SDK v2)
+    implementation platform('software.amazon.awssdk:bom:2.25.16')
+    implementation 'software.amazon.awssdk:s3'
 }
 
 tasks.named('test') {
