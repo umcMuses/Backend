@@ -73,3 +73,6 @@ tasks.named('test') {
     useJUnitPlatform()
     //enabled = false  // 테스트 환경 오류로 스킵
 }
+jar {
+    enabled = false
+}
