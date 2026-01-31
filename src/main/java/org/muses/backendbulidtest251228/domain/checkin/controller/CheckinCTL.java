@@ -2,6 +2,7 @@ package org.muses.backendbulidtest251228.domain.checkin.controller;
 
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,7 @@ public class CheckinCTL {
     )
     @PostMapping("/{token}/confirm")
     public ApiResponse<CheckinConfirmResDTO> confirm(
+            @Parameter(name = "token", description = "체크인 링크 식별 토큰", example = "chkin-abcd-1234")
             @PathVariable String token, // 해당 프로젝트의 체크인 링크 토큰
             @RequestBody CheckinConfirmReqDTO req // 티켓의 토큰
     ) {
