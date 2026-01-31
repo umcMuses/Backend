@@ -39,3 +39,7 @@ out/
 ### Spring Boot - 민감 정보만 제외 ###
 src/main/resources/application-local.properties
 src/main/resources/application-local.yml
+
+.env.local
+.env
+*.env
