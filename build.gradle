@@ -69,7 +69,7 @@ dependencies {
     implementation 'com.google.zxing:javase:3.5.4'
 
     // AWS S3 (SDK v2)
-    implementation platform('software.amazon.awssdk:bom:2.25.16')
+    implementation platform('software.amazon.awssdk:bom:2.41.17')
     implementation 'software.amazon.awssdk:s3'
 }
 
