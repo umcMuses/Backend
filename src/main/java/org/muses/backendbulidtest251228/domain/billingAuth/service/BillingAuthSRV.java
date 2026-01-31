@@ -81,9 +81,7 @@ public class BillingAuthSRV{
         BillingAuthENT billingAuth = BillingAuthENT.active(
                 order,
                 issued.getCustomerKey(),
-                issued.getBillingKey(),
-                issued.getCardCompany(),
-                issued.getCardNumber()
+                issued.getBillingKey()
         );
 
         try {
