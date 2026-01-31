@@ -59,16 +59,13 @@ public class BillingAuthENT {
     private String cardNumberMasked;
 
 
-    public static BillingAuthENT active(OrderENT order, String customerKey, String billingKey,
-                                     String cardCompany, String cardNumberMasked) {
+    public static BillingAuthENT active(OrderENT order, String customerKey, String billingKey) {
         return BillingAuthENT.builder()
                 .order(order)
                 .customerKey(customerKey)
                 .billingKey(billingKey)
                 .status(BillingAuthStatus.ACTIVE)
                 .provider(PgProvider.TOSS)
-                .cardCompany(cardCompany)
-                .cardNumberMasked(cardNumberMasked)
                 .createdAt(LocalDateTime.now())
                 .build();
     }

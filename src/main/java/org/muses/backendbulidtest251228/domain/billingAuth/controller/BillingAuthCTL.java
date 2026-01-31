@@ -31,7 +31,7 @@ public class BillingAuthCTL {
             @Parameter(
                     description = "빌링 인증을 연결할 주문 ID",
                     required = true,
-                    example = "34"
+                    example = "1"
             )
             @RequestParam Long orderId,
 

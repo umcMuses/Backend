@@ -27,7 +27,8 @@ public class EventCTL {
     // =========================
     @Operation(
             summary = "이벤트 목록 조회",
-            description = "이벤트 목록을 페이지 기반으로 조회합니다. 제목 검색(keyword)을 지원합니다."
+            description = "이벤트 목록을 페이지 기반으로 조회합니다. 제목 검색(keyword)을 지원합니다." +
+                    "content에서의 첫 사진을 썸네일로 해주시면 됩니다. 만일 content 의 사진이 없다면 기본 이미지를 넣어주세요."
     )
     @GetMapping
     public ApiResponse<List<EventResDTO>> eventList(
