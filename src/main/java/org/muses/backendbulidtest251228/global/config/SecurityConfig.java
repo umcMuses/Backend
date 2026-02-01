@@ -77,7 +77,9 @@ public class SecurityConfig {
 			"http://localhost:5173",
 			"http://localhost:8080",
 			"http://localhost:9095",
-			"http://localhost:9098"
+			"http://localhost:9098",
+			"https://mymuses.site",
+			"https://www.mymuses.site"
 		));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
 		configuration.setAllowedHeaders(Arrays.asList("*"));
