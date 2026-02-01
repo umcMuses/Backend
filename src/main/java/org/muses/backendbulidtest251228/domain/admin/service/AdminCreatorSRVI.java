@@ -24,6 +24,7 @@ import org.muses.backendbulidtest251228.global.businessError.BusinessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,17 +48,16 @@ public class AdminCreatorSRVI implements AdminCreatorSRV {
 		int page,
 		int size
 	) {
-		Pageable pageable = PageRequest.of(page, size);
+		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 		Page<CreatorApplicationENT> applicationPage;
-		long totalCount;
 
 		if (status == null) {
 			applicationPage = applicationRepo.findAllWithMember(pageable);
-			totalCount = applicationRepo.count();
+
 		} else {
 			applicationPage = applicationRepo.findByStatusWithMember(status, pageable);
-			totalCount = applicationRepo.countByStatus(status);
 		}
+		long totalCount = applicationPage.getTotalElements();
 
 		List<AdminCreatorDT.ApplicationListItem> items = applicationPage.getContent().stream()
 			.map(this::toApplicationListItem)
