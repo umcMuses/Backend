@@ -98,4 +98,19 @@ public class Member extends BaseEntity {
     public void changeProfileImage(String profileImgUrl) {
         this.profileImgUrl = profileImgUrl;
     }
+
+	/**
+	 * 회원 Role 변경 (관리자 크리에이터 전환 승인 시 사용)
+	 * @param newRole 새로운 Role
+	 */
+	public void changeRole(Role newRole) {
+		this.role = newRole;
+	}
+
+	/**
+	 * 크리에이터로 승격
+	 */
+	public void upgradeToCreator() {
+		this.role = Role.CREATOR;
+	}
 }
