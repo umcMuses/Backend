@@ -30,10 +30,12 @@ public class AuthRequestDT {
 
 	@Data
 	public static class ProfileSetupRequest {
-		private String profileImgUrl;
+		@NotBlank
 		private String nickName;
 		private String introduction;
+		@NotBlank
 		private String birthday;
+		@NotBlank
 		private String gender;
 	}
 }
