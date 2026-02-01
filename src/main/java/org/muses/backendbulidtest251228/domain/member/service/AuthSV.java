@@ -12,7 +12,7 @@ import org.muses.backendbulidtest251228.domain.member.enums.Provider;
 import org.muses.backendbulidtest251228.domain.member.enums.Role;
 import org.muses.backendbulidtest251228.domain.member.repository.MemberRepo;
 import org.muses.backendbulidtest251228.domain.storage.entity.AttachmentENT;
-import org.muses.backendbulidtest251228.domain.storage.service.AttachmentSRVI;
+import org.muses.backendbulidtest251228.domain.storage.service.AttachmentSRV;
 import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
 import org.muses.backendbulidtest251228.global.businessError.BusinessException;
 import org.muses.backendbulidtest251228.global.jwt.JwtTokenProvider;
@@ -30,7 +30,7 @@ public class AuthSV {
 	private final MemberRepo memberRepo;
 	private final PasswordEncoder passwordEncoder;
 	private final JwtTokenProvider jwtTokenProvider;
-	private final AttachmentSRVI attachmentSRVI;
+	private final AttachmentSRV attachmentSRV;
 
 	private static final String PROFILE_TARGET_TYPE = "member";
 	private static final Set<String> ALLOWED_EXT = Set.of("jpg", "jpeg", "png", "webp");
@@ -98,9 +98,9 @@ public class AuthSV {
 		if (profileImg != null && !profileImg.isEmpty()) {
 			validateImageExtension(profileImg);
 			// 기존 프로필 이미지 삭제
-			attachmentSRVI.deleteAll(PROFILE_TARGET_TYPE, member.getId());
+			attachmentSRV.deleteAll(PROFILE_TARGET_TYPE, member.getId());
 			// 새 이미지 업로드
-			AttachmentENT saved = attachmentSRVI.upload(PROFILE_TARGET_TYPE, member.getId(), profileImg);
+			AttachmentENT saved = attachmentSRV.upload(PROFILE_TARGET_TYPE, member.getId(), profileImg);
 			profileImgUrl = saved.getFileUrl();
 		}
 		// 업데이트, role 변경
@@ -128,7 +128,7 @@ public class AuthSV {
 		Member member = memberRepo.findByEmail(email)
 			.orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
 		// 프로필 이미지 삭제
-		attachmentSRVI.deleteAll(PROFILE_TARGET_TYPE, member.getId());
+		attachmentSRV.deleteAll(PROFILE_TARGET_TYPE, member.getId());
 		// MVP 이므로 일단 즉시 삭제만 구현
 		memberRepo.delete(member);
 	}
