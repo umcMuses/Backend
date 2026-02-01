@@ -57,14 +57,14 @@ public class AuthCTL {
 			@AuthenticationPrincipal UserDetails userDetails,
 			@Parameter(description = "프로필 이미지 (선택, jpg/jpeg/png/webp)")
 			@RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
-			@Parameter(description = "닉네임", required = true)
+			@Parameter(description = "닉네임")
 			@RequestPart("nickName") String nickName,
 			@Parameter(description = "자기소개")
 			@RequestPart(value = "introduction", required = false) String introduction,
 			@Parameter(description = "생년월일 (yyyy-MM-dd)")
-			@RequestPart(value = "birthday", required = false) String birthday,
+			@RequestPart(value = "birthday") String birthday,
 			@Parameter(description = "성별 (0=남, 1=여)")
-			@RequestPart(value = "gender", required = false) String gender
+			@RequestPart(value = "gender") String gender
 	) {
 		AuthRequestDT.ProfileSetupRequest request = new AuthRequestDT.ProfileSetupRequest();
 		request.setNickName(nickName);
