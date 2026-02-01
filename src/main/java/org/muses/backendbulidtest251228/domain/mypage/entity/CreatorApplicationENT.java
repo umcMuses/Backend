@@ -36,4 +36,19 @@ public class CreatorApplicationENT extends BaseEntity {
         ent.status = ApplicationStatus.PENDING;
         return ent;
     }
+
+    /**
+     * 상태 변경 (관리자 승인/반려 처리용)
+     */
+    public void updateStatus(ApplicationStatus newStatus) {
+        this.status = newStatus;
+    }
+
+    public void approve() {
+        this.status = ApplicationStatus.APPROVED;
+    }
+
+    public void reject() {
+        this.status = ApplicationStatus.REJECTED;
+    }
 }
