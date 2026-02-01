@@ -191,7 +191,7 @@ public class AdminCreatorSRVI implements AdminCreatorSRV {
 		try {
 			newStatus = ApplicationStatus.valueOf(request.getStatus().toUpperCase());
 		} catch (IllegalArgumentException e) {
-			throw new BusinessException(ErrorCode.BAD_REQUEST, "잘못된 상태값입니다.(APPROVE/REJECTED)");
+			throw new BusinessException(ErrorCode.BAD_REQUEST, "잘못된 상태값입니다.(APPROVED/REJECTED)");
 		}
 
 		// 상태 업데이트
