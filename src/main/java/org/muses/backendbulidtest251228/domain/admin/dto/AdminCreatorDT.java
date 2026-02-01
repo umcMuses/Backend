@@ -106,6 +106,8 @@ public class AdminCreatorDT {
 		private Long attachmentId;
 		@Schema(description = "파일 URL", example = "https://bucket.s3.region.amazonaws.com/...")
 		private String fileUrl;
+		@Schema(description = "원본 파일명", example = "id_card.jpg")
+		private String originalFilename;
 		@Schema(description = "확장자", example = "jpg")
 		private String extension;
 	}
@@ -146,8 +148,6 @@ public class AdminCreatorDT {
 		private String originalFilename;
 		@Schema(description = "확장자", example = "jpg")
 		private String extension;
-		@Schema(description = "제출 여부", example = "true")
-		private boolean submitted;
 	}
 
 

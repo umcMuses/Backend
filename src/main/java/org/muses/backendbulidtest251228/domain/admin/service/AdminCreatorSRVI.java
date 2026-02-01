@@ -1,19 +1,26 @@
 package org.muses.backendbulidtest251228.domain.admin.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.muses.backendbulidtest251228.domain.admin.dto.AdminCreatorDT;
+import org.muses.backendbulidtest251228.domain.admin.entity.CreatorApplicationAuditENT;
 import org.muses.backendbulidtest251228.domain.admin.repository.CreatorApplicationAuditRepo;
 import org.muses.backendbulidtest251228.domain.member.entity.Member;
+import org.muses.backendbulidtest251228.domain.member.enums.Role;
 import org.muses.backendbulidtest251228.domain.member.repository.MemberRepo;
+import org.muses.backendbulidtest251228.domain.mypage.entity.CreatorApplicationDocENT;
 import org.muses.backendbulidtest251228.domain.mypage.entity.CreatorApplicationENT;
 import org.muses.backendbulidtest251228.domain.mypage.enums.ApplicationStatus;
 import org.muses.backendbulidtest251228.domain.mypage.enums.CreatorType;
 import org.muses.backendbulidtest251228.domain.mypage.enums.DocType;
 import org.muses.backendbulidtest251228.domain.mypage.repository.CreatorApplicationDocRepo;
 import org.muses.backendbulidtest251228.domain.mypage.repository.CreatorApplicationREP;
+import org.muses.backendbulidtest251228.domain.storage.entity.AttachmentENT;
+import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
+import org.muses.backendbulidtest251228.global.businessError.BusinessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -83,6 +90,137 @@ public class AdminCreatorSRVI implements AdminCreatorSRV {
 			.statusDescription(getStatusDescription(status))
 			.createdAt(app.getCreatedAt())
 			.build();
+	}
+
+	@Override
+	public AdminCreatorDT.DocumentListResponse getApplicationDocuments(Long appId) {
+		CreatorApplicationENT app = applicationRepo.findByIdWithMember(appId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "신청 정보를 찾을 수 없습니다."));
+
+		Member member = app.getMember();
+		CreatorType creatorType = app.getCreatorType();
+
+		List<CreatorApplicationDocENT> docs = docRepo.findAllByApplication_AppId(appId);
+		List<AdminCreatorDT.DocumentItem> documentItems = docs.stream()
+			.map(this::toDocumentItem)
+			.collect(Collectors.toList());
+
+		Set<DocType> requiredDocs = getRequiredDocs(creatorType);
+
+		List<String> requiredDocNames = requiredDocs.stream()
+			.map(Enum::name)
+			.toList();
+
+		return AdminCreatorDT.DocumentListResponse.builder()
+			.applicationId(appId)
+			.memberName(member.getName())
+			.creatorType(creatorType.name())
+			.documents(documentItems)
+			.requiredDocs(requiredDocNames)
+			.build();
+	}
+
+	private AdminCreatorDT.DocumentItem toDocumentItem(CreatorApplicationDocENT doc) {
+		AttachmentENT attachment = doc.getAttachment();
+		DocType docType = doc.getDocType();
+
+		return AdminCreatorDT.DocumentItem.builder()
+			.docId(doc.getDocId())
+			.docTypeDescription(docType.getDescription())
+			.attachmentId(attachment.getId())
+			.fileUrl(attachment.getFileUrl())
+			.originalFilename(attachment.getOriginalFilename())
+			.extension(attachment.getExtension())
+			.build();
+	}
+
+	// ========== 개별 서류 조회 ==========
+	@Override
+	public AdminCreatorDT.SingleDocumentResponse getSingleDocument(Long appId, String docType) {
+
+		if (!applicationRepo.existsById(appId)) {
+			throw new BusinessException(ErrorCode.NOT_FOUND,"신청 정보를 찾을 수 없습니다.");
+		}
+
+		DocType type;
+		try {
+			type = DocType.valueOf(docType.toUpperCase());
+		} catch (IllegalArgumentException e) {
+			throw new BusinessException(ErrorCode.BAD_REQUEST, "잘못된 서류입니다.");
+		}
+
+		// 해당 서류 조회
+		CreatorApplicationDocENT doc = docRepo.findByApplication_AppIdAndDocType(appId, type)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "서류를 찾을 수 없습니다."));
+
+		AttachmentENT attachment = doc.getAttachment();
+
+		return AdminCreatorDT.SingleDocumentResponse.builder()
+			.applicationId(appId)
+			.docType(type.name())
+			.docTypeDescription(type.getDescription())
+			.fileUrl(attachment.getFileUrl())
+			.originalFilename(attachment.getOriginalFilename())
+			.extension(attachment.getExtension())
+			.build();
+	}
+
+	// ========== 승인/반려 처리 ==========
+	@Override
+	@Transactional
+	public AdminCreatorDT.ReviewResponse reviewApplication(
+		Long adminId,
+		AdminCreatorDT.ReviewRequest request
+	) {
+		Member admin = memberRepo.findById(adminId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "관리자 정보를 찾을 수 없습니다."));
+		if (admin.getRole() != Role.ADMIN) {
+			throw new BusinessException(ErrorCode.FORBIDDEN, "관리자 권한이 필요합니다.");
+		}
+
+		Long appId = request.getApplicationId();
+		CreatorApplicationENT app = applicationRepo.findByIdWithMember(appId)
+			.orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "신청 정보를 찾을 수 없습니다."));
+
+		ApplicationStatus previousStatus = app.getStatus();
+		if (previousStatus != ApplicationStatus.PENDING) {
+			throw new BusinessException(ErrorCode.BAD_REQUEST, "대기중(PENDING) 상태의 신청만 처리할 수 있습니다.");
+		}
+
+		ApplicationStatus newStatus = app.getStatus();
+		try {
+			newStatus = ApplicationStatus.valueOf(request.getStatus().toUpperCase());
+		} catch (IllegalArgumentException e) {
+			throw new BusinessException(ErrorCode.BAD_REQUEST, "잘못된 상태값입니다.(APPROVE/REJECTED)");
+		}
+
+		// 상태 업데이트
+		app.updateStatus(newStatus);
+		// 승인 시 회원 Role 변경 (MAKER -> CREATOR)
+		if (newStatus == ApplicationStatus.APPROVED) {
+			Member applicant = app.getMember();
+			upgradeToCreator(applicant);
+			log.info("[Admin] 회원 '{}' 크리에이터 전환 완료", applicant.getName());
+		}
+		// 심사 이력 저장
+		CreatorApplicationAuditENT audit = CreatorApplicationAuditENT.create(
+			app, admin, previousStatus, newStatus
+		);
+		auditRepo.save(audit);
+		log.info("[Admin] 신청 {} 처리 완료: {} -> {} (관리자: {})", appId, previousStatus, newStatus, adminId);
+
+		return AdminCreatorDT.ReviewResponse.builder()
+			.applicationId(appId)
+			.memberId(app.getMember().getId())
+			.status(newStatus.name())
+			.statusDescription(getStatusDescription(newStatus))
+			.processedAt(LocalDateTime.now())
+			.adminId(adminId)
+			.build();
+	}
+
+	private void upgradeToCreator(Member member) {
+		member.upgradeToCreator();
 	}
 
 	// ========== 유틸리티 메서드 ==========

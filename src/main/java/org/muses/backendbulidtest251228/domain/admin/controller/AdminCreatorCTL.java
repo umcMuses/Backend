@@ -28,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AdminCreatorCTL {
 
-	private AdminCreatorSRVI adminCreatorSRVI;
+	private final AdminCreatorSRVI adminCreatorSRVI;
 
 	@Operation(
 		summary = "크리에이터 전환 신청 목록 조회",
@@ -40,7 +40,7 @@ public class AdminCreatorCTL {
 			"""
 	)
 	@GetMapping("/applications")
-	public ApiResponse<AdminCreatorDT> getApplicationList(
+	public ApiResponse<AdminCreatorDT.ApplicationListResponse> getApplicationList(
 		@Parameter(description = "상태 필터")
 		@RequestParam(required = false)ApplicationStatus status,
 		@Parameter(description = "페이지 번호(default: 0)")
@@ -50,17 +50,22 @@ public class AdminCreatorCTL {
 		@AuthenticationPrincipal PrincipalDetails principalDetails
 	) {
 		validateAdmin(principalDetails);
-
-		return null;
+		AdminCreatorDT.ApplicationListResponse response =
+			adminCreatorSRVI.getApplicationList(status, page, size);
+		return ApiResponse.success(response);
 	}
 
 	@Operation(summary = "서류 전체 조회 API")
 	@GetMapping("/applications/{appId}/documents")
-	public ApiResponse<AdminCreatorDT> getApplicationDocuments(
+	public ApiResponse<AdminCreatorDT.DocumentListResponse> getApplicationDocuments(
+		@Parameter(description = "신청 ID", required = true)
+		@PathVariable Long appId,
 		@AuthenticationPrincipal PrincipalDetails principalDetails
 	) {
 		validateAdmin(principalDetails);
-		return null;
+		AdminCreatorDT.DocumentListResponse response =
+			adminCreatorSRVI.getApplicationDocuments(appId);
+		return ApiResponse.success(response);
 	}
 
 	@Operation(summary = "서류 개별 이미지 조회 API", description = "특정 서류 이미지 버튼 클릭시 해당 서류만 팝업 형식으로 조회합니다.")
@@ -73,26 +78,29 @@ public class AdminCreatorCTL {
 		@AuthenticationPrincipal PrincipalDetails principalDetails
 	) {
 		validateAdmin(principalDetails);
-
-
-		return ApiResponse.success(null);
+		AdminCreatorDT.SingleDocumentResponse response =
+			adminCreatorSRVI.getSingleDocument(appId, docType);
+		return ApiResponse.success(response);
 	}
 
 	@Operation(summary = "크리에이터 전환 승인/반려 API",
 		description = """
+			한 번 승인/반려 시 수정이 불가능합니다.
+			
 			- PENDING 상태의 신청만 처리 가능
 			- 승인(APPROVED) 시 Role이 CREATOR로 변경됨
-			- 반려(REJECTED) 시 
+			- 반려(REJECTED) 시 Role 유지
 			"""
 	)
 	@PatchMapping("/applications/review")
-	public ApiResponse<AdminCreatorDT> updateApplicationReview(
-		@Valid @RequestBody AdminCreatorDT request,
+	public ApiResponse<AdminCreatorDT.ReviewResponse> updateApplicationReview(
+		@Valid @RequestBody AdminCreatorDT.ReviewRequest request,
 		@AuthenticationPrincipal PrincipalDetails principalDetails
 	) {
 		Long adminId = validateAdmin(principalDetails);
-
-		return null;
+		AdminCreatorDT.ReviewResponse response =
+			adminCreatorSRVI.reviewApplication(adminId, request);
+		return ApiResponse.success(response);
 	}
 
 	// 관리자 ID 반환
