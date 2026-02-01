@@ -4,6 +4,7 @@ import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
 import org.muses.backendbulidtest251228.domain.member.dto.AuthRequestDT;
 import org.muses.backendbulidtest251228.domain.member.dto.AuthResponseDT;
 import org.muses.backendbulidtest251228.domain.member.service.AuthSV;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,9 +13,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -45,13 +49,30 @@ public class AuthCTL {
 	}
 
 	@Operation(summary = "회원가입 직후 초기 프로필 생성 API",
-		description = "<p>자체/소셜 회원가입 직후 이어지는 API이며, 회원가입을 했지만 프로필을 설정하지 않고 종료했을 경우 여기로 리다이렉트 됩니다.</p>")
-	@PostMapping("/profile/create")
+		description =
+			"<p>자체/소셜 회원가입 직후 이어지는 API이며, 회원가입을 했지만 프로필을 설정하지 않고 종료했을 경우 여기로 리다이렉트 됩니다.</p>"
+				+ "<p>(프로필 이미지는 선택 사항입니다.)</p>")
+	@PostMapping(value = "/profile/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ApiResponse<AuthResponseDT.TokenResponse> setupProfile(
 			@AuthenticationPrincipal UserDetails userDetails,
-			@RequestBody AuthRequestDT.ProfileSetupRequest request) {
+			@Parameter(description = "프로필 이미지 (선택, jpg/jpeg/png/webp)")
+			@RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+			@Parameter(description = "닉네임")
+			@RequestPart("nickName") String nickName,
+			@Parameter(description = "자기소개")
+			@RequestPart(value = "introduction", required = false) String introduction,
+			@Parameter(description = "생년월일 (yyyy-MM-dd)")
+			@RequestPart(value = "birthday") String birthday,
+			@Parameter(description = "성별 (0=남, 1=여)")
+			@RequestPart(value = "gender") String gender
+	) {
+		AuthRequestDT.ProfileSetupRequest request = new AuthRequestDT.ProfileSetupRequest();
+		request.setNickName(nickName);
+		request.setIntroduction(introduction);
+		request.setBirthday(birthday);
+		request.setGender(gender);
 
-		AuthResponseDT.TokenResponse response = authSV.setupProfile(userDetails.getUsername(), request);
+		AuthResponseDT.TokenResponse response = authSV.setupProfile(userDetails.getUsername(), request, profileImage);
 		return ApiResponse.success(response);
 	}
 
