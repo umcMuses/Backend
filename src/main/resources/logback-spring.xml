@@ -47,10 +47,15 @@
         </appender>
         <!-- JSON 포맷 (CloudWatch Logs Insights 쿼리 최적화) -->
         <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <!-- Error 로그만 필터링 -->
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>ERROR</level>
+            </filter>
             <file>/home/ubuntu/muses/app-json.log</file>
             <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-                <fileNamePattern>/home/ubuntu/muses/app-json.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <fileNamePattern>/home/ubuntu/muses/app-error.json.%d{yyyy-MM-dd}.log</fileNamePattern>
                 <maxHistory>7</maxHistory>
+                <totalSizeCap>500MB</totalSizeCap>
             </rollingPolicy>
             <encoder class="net.logstash.logback.encoder.LogstashEncoder">
                 <timeZone>Asia/Seoul</timeZone>
@@ -59,10 +64,12 @@
 
         <root level="INFO">
             <appender-ref ref="FILE"/>
+            <appender-ref ref="JSON_FILE"/>
         </root>
-        <!-- 에러 로그만 JSON 별도 저장 -->
+
         <logger name="org.muses" level="DEBUG" additivity="false">
             <appender-ref ref="FILE"/>
+            <appender-ref ref="JSON_FILE"/>
         </logger>
     </springProfile>
 

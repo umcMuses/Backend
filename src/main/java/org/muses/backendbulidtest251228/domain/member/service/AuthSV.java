@@ -55,10 +55,10 @@ public class AuthSV {
 	// 자체 로그인
 	public AuthResponseDT.TokenResponse login(AuthRequestDT.LocalLoginRequest request) {
 		Member member = memberRepo.findByEmail(request.getEmail())
-			.orElseThrow(() -> new BusinessException(ErrorCode.BAD_REQUEST, "가입되지 않은 이메일입니다."));
+			.orElseThrow(() -> new BusinessException(ErrorCode.BAD_REQUEST, "이메일 또는 비밀번호가 올바르지 않습니다."));
 
 		if (!passwordEncoder.matches(request.getPassword(), member.getPasswd())) {
-			throw new BusinessException(ErrorCode.BAD_REQUEST, "비밀번호가 일치하지 않습니다.");
+			throw new BusinessException(ErrorCode.BAD_REQUEST, "이메일 또는 비밀번호가 올바르지 않습니다.");
 		}
 		String accessToken = jwtTokenProvider.createToken(member.getEmail(), member.getRole().name());
 		String refreshToken = "";
