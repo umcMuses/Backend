@@ -14,17 +14,27 @@ public interface TicketRepo extends JpaRepository<TicketENT, Long> {
 
     Optional<TicketENT> findByOrderItem(OrderItemENT orderItem);
 
-
-    @Modifying (clearAutomatically = true, flushAutomatically = true)
     @Query("""
-        update TicketENT t
-           set t.status = 'USED',
-               t.usedAt = CURRENT_TIMESTAMP
-         where t.ticketToken = :token
-           and t.status = 'UNUSED'
-    """)
-    int markUsedIfUnused(@Param("token") String token);
-// 내 티켓 리스트
+    select t
+    from TicketENT t
+    join fetch t.orderItem
+    where t.id = :ticketId
+""")
+    Optional<TicketENT> findByIdWithOrderItem(@Param("ticketId") Long ticketId);
+
+
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+    update TicketENT t
+       set t.status = 'USED',
+           t.usedAt = CURRENT_TIMESTAMP
+     where t.id = :ticketId
+       and t.status = 'UNUSED'
+""")
+    int markUsedIfUnusedById(@Param("ticketId") Long ticketId);
+
+    // 내 티켓 리스트
     @Query("""
     select t
       from TicketENT t

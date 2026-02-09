@@ -11,13 +11,19 @@ import org.muses.backendbulidtest251228.domain.checkin.dto.CheckinConfirmResDTO;
 import org.muses.backendbulidtest251228.domain.checkin.generator.QrGenerator;
 import org.muses.backendbulidtest251228.domain.checkin.service.CheckinLinkSRV;
 import org.muses.backendbulidtest251228.domain.checkin.service.CheckinSRV;
+import org.muses.backendbulidtest251228.domain.member.entity.Member;
+import org.muses.backendbulidtest251228.domain.member.repository.MemberRepo;
 import org.muses.backendbulidtest251228.domain.ticket.entity.TicketENT;
 import org.muses.backendbulidtest251228.domain.ticket.repository.TicketRepo;
 import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
+import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
+import org.muses.backendbulidtest251228.global.businessError.BusinessException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -39,22 +45,28 @@ public class CheckinCTL {
 
     private final TicketRepo ticketRepo;
 
+    private final MemberRepo memberRepo;
+
     @Value("${app.base-url}")
     private String baseUrl;
 
-    // 관리자(스태프)가 체크인 페이지에서 QR 을 스캔할때 그 티켓을 USED로 바꾸고
-    // 예매자/리워드 정보를 응답으로 돌려주는 API
+    @Value("${ticket.base-url}")
+    private String ticketUrl;
+
+    // QR 스캔으로 전달된 ticketId를 사용해 체크인을 확정하는 API
     @Operation(
             summary = "체크인 확정",
-            description = "스태프가 QR 스캔으로 전달한 ticketToken을 사용해 체크인을 처리합니다."
+            description = "QR 스캔으로 전달된 ticketId를 사용해 체크인을 처리합니다."
     )
-    @PostMapping("/{token}/confirm")
+    @GetMapping ("/result")
     public ApiResponse<CheckinConfirmResDTO> confirm(
-            @Parameter(name = "token", description = "체크인 링크 식별 토큰", example = "chkin-abcd-1234")
-            @PathVariable String token, // 해당 프로젝트의 체크인 링크 토큰
-            @RequestBody CheckinConfirmReqDTO req // 티켓의 토큰
+            @RequestParam("ticketId") Long ticketId,
+            @RequestParam("name") String name,
+            @RequestParam("nick") String nick,
+            @RequestParam("qty") Integer qty,
+            @RequestParam("reward") String reward
     ) {
-        CheckinConfirmResDTO confirm = checkinService.confirm(token, req.getTicketToken());
+        CheckinConfirmResDTO confirm = checkinService.confirm(ticketId, name, nick, qty, reward);
 
         return ApiResponse.success(confirm);
     }
@@ -95,14 +107,25 @@ public class CheckinCTL {
     })
     @GetMapping("/tickets/{ticketId}/qr.png")
     public ResponseEntity<byte[]> generateTicketQr(
-            @PathVariable Long ticketId
+            @PathVariable Long ticketId,
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
+
+
+        if (userDetails == null || userDetails.getUsername() == null || userDetails.getUsername().isBlank()) {
+            throw new BusinessException(ErrorCode.AUTH_REQUIRED);
+        }
+        Member member = memberRepo.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new BusinessException(ErrorCode.AUTH_INVALID, "유효하지 않은 인증 정보입니다."));
+
+
+
         TicketENT ticket = ticketRepo.findById(ticketId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 티켓"));
 
         String ticketToken = ticket.getTicketToken();
 
-        byte[] png = qrGenerator.generatePng(ticketToken);
+        byte[] png = qrGenerator.generatePng(ticketToken, ticketUrl,ticketId, member);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_PNG)
