@@ -71,6 +71,9 @@ dependencies {
     // AWS S3 (SDK v2)
     implementation platform('software.amazon.awssdk:bom:2.41.17')
     implementation 'software.amazon.awssdk:s3'
+
+    // AWS CloudWatch
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
 }
 
 tasks.named('test') {
