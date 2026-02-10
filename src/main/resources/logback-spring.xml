@@ -1,32 +1,76 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <!-- 콘솔 출력 -->
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight([%-5level]) %cyan([%thread]) %logger{36} - %msg%n</pattern>
-        </encoder>
-    </appender>
+    <!-- 콘솔 출력 (개발용) -->
+    <springProfile name="local">
+        <!-- 콘솔 출력 -->
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight([%-5level]) %cyan([%thread]) %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
 
-    <!-- 전체 기본 레벨 -->
-    <root level="INFO">
-        <appender-ref ref="CONSOLE"/>
-    </root>
+        <!-- 전체 기본 레벨 -->
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
 
-    <!-- 상세정보 표시 -->
-    <logger name="org.muses" level="DEBUG"/>
+        <!-- 상세정보 표시 -->
+        <logger name="org.muses" level="DEBUG"/>
 
-    <!-- ==================== MyBatis 쿼리 로그 ==================== -->
-    <logger name="org.muses.mapper" level="DEBUG"/>
-    <logger name="org.mybatis" level="DEBUG"/>
+        <!-- ==================== MyBatis 쿼리 로그 ==================== -->
+        <logger name="org.muses.mapper" level="DEBUG"/>
+        <logger name="org.mybatis" level="DEBUG"/>
 
-    <!-- ==================== JPA/Hibernate 쿼리 로그 ==================== -->
-    <!-- SQL 쿼리 출력 -->
-    <logger name="org.hibernate.SQL" level="DEBUG"/>
-    <!-- 바인딩 파라미터 출력 -->
-    <logger name="org.hibernate.orm.jdbc.bind" level="TRACE"/>
+        <!-- ==================== JPA/Hibernate 쿼리 로그 ==================== -->
+        <!-- SQL 쿼리 출력 -->
+        <logger name="org.hibernate.SQL" level="DEBUG"/>
+        <!-- 바인딩 파라미터 출력 -->
+        <logger name="org.hibernate.orm.jdbc.bind" level="TRACE"/>
 
-    <!-- ==================== Spring 관련 ==================== -->
-    <logger name="org.springframework.web" level="INFO"/>
-    <logger name="org.springframework.transaction" level="DEBUG"/>
+        <!-- ==================== Spring 관련 ==================== -->
+        <logger name="org.springframework.web" level="INFO"/>
+        <logger name="org.springframework.transaction" level="DEBUG"/>
+    </springProfile>
+
+    <!-- 파일 출력 (운영용 - CloudWatch 연동) -->
+    <springProfile name="prod">
+        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>/home/ubuntu/muses/app.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>/home/ubuntu/muses/app.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>7</maxHistory>
+                <totalSizeCap>500MB</totalSizeCap>
+            </rollingPolicy>
+            <encoder>
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] [%thread] %logger{36} - %msg%n</pattern>
+            </encoder>
+        </appender>
+        <!-- JSON 포맷 (CloudWatch Logs Insights 쿼리 최적화) -->
+        <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <!-- Error 로그만 필터링 -->
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>ERROR</level>
+            </filter>
+            <file>/home/ubuntu/muses/app-json.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>/home/ubuntu/muses/app-error.json.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>7</maxHistory>
+                <totalSizeCap>500MB</totalSizeCap>
+            </rollingPolicy>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <timeZone>Asia/Seoul</timeZone>
+            </encoder>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="JSON_FILE"/>
+        </root>
+
+        <logger name="org.muses" level="DEBUG" additivity="false">
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="JSON_FILE"/>
+        </logger>
+    </springProfile>
 
 </configuration>

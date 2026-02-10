@@ -26,7 +26,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
 @Tag(
@@ -77,7 +76,26 @@ public class CheckinCTL {
      */
     @Operation(
             summary = "프로젝트 체크인 링크 생성/조회",
-            description = "프로젝트별 체크인 전용 URL을 생성하거나 기존 링크를 반환합니다."
+            description = "프로젝트별 체크인 전용 URL을 생성하거나 이미 존재하면 기존 링크를 반환합니다.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "체크인 링크 생성/조회 성공",
+                            content = @io.swagger.v3.oas.annotations.media.Content(
+                                    mediaType = "application/json",
+                                    schema = @io.swagger.v3.oas.annotations.media.Schema(
+                                            example = """
+                                        {
+                                          "success": true,
+                                          "data": {
+                                            "checkinUrl": "https://mymuses.site/checkin/abc123XYZ"
+                                          }
+                                        }
+                                        """
+                                    )
+                            )
+                    )
+            }
     )
     @PostMapping("/projects/{projectId}/link")
     public ApiResponse<Map<String, Object>> createCheckinLink(
@@ -135,7 +153,26 @@ public class CheckinCTL {
 
     @Operation(
             summary = "티켓 토큰 조회",
-            description = "티켓 ID를 통해 체크인에 사용되는 ticketToken을 조회합니다."
+            description = "티켓 ID를 통해 체크인에 사용되는 ticketToken을 조회합니다.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "티켓 토큰 조회 성공",
+                            content = @io.swagger.v3.oas.annotations.media.Content(
+                                    mediaType = "application/json",
+                                    schema = @io.swagger.v3.oas.annotations.media.Schema(
+                                            example = """
+                                        {
+                                          "success": true,
+                                          "data": {
+                                            "ticketToken": "abc123XYZ"
+                                          }
+                                        }
+                                        """
+                                    )
+                            )
+                    )
+            }
     )
     @GetMapping("/tickets/{ticketId}")
     public ApiResponse<Map<String, Object>> getToken(

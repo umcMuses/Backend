@@ -1,6 +1,7 @@
 package org.muses.backendbulidtest251228.domain.event.service;
 
 import lombok.RequiredArgsConstructor;
+import org.muses.backendbulidtest251228.domain.event.dto.EventDetailResDTO;
 import org.muses.backendbulidtest251228.domain.event.dto.EventResDTO;
 import org.muses.backendbulidtest251228.domain.event.entity.Event;
 import org.muses.backendbulidtest251228.domain.event.repository.EventRepo;
@@ -44,12 +45,12 @@ public class EventSRV {
     }
 
 
-    public ApiResponse<EventResDTO> getEventDetail(Long eventId) {
+    public ApiResponse<EventDetailResDTO> getEventDetail(Long eventId) {
 
         Event event = eventRepo.findPublishedById(eventId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "해당 이벤트를 찾을 수 없습니다."));
 
-        EventResDTO dto = new EventResDTO(
+        EventResDTO eventDto = new EventResDTO(
                 event.getId(),
                 event.getTitle(),
                 event.getDescription(),
@@ -58,6 +59,16 @@ public class EventSRV {
                 event.getUploadDateTime()
         );
 
-        return ApiResponse.success(dto);
+        Long prevId = eventRepo
+                .findPrevIds(event.getUploadDateTime(), event.getId(), PageRequest.of(0, 1))
+                .stream().findFirst().orElse(null);
+
+        Long nextId = eventRepo
+                .findNextIds(event.getUploadDateTime(), event.getId(), PageRequest.of(0, 1))
+                .stream().findFirst().orElse(null);
+
+        EventDetailResDTO res = new EventDetailResDTO(eventDto, prevId, nextId);
+
+        return ApiResponse.success(res);
     }
 }
