@@ -64,7 +64,7 @@ public class AuthCTL {
 			@Parameter(description = "생년월일 (yyyy-MM-dd)")
 			@RequestPart(value = "birthday") String birthday,
 			@Parameter(description = "성별 (0=남, 1=여)")
-			@RequestPart(value = "gender") Integer gender
+			@RequestParam(value = "gender") Integer gender
 	) {
 		AuthRequestDT.ProfileSetupRequest request = new AuthRequestDT.ProfileSetupRequest();
 		request.setNickName(nickName);

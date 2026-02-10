@@ -36,7 +36,7 @@ public class AuthRequestDT {
 		@NotBlank
 		private String nickName;
 		private String introduction;
-		@NotBlank @Schema(description = "생년월일 (yyyy-mm-dd)", example = "2001-01-01")
+		@NotBlank @Schema(description = "생년월일 (yyyy-MM-dd)", example = "2001-01-01")
 		private String birthday;
 		@NotNull @Min(0) @Max(1)
 		private Integer gender;

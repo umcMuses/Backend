@@ -57,7 +57,8 @@ public class MyPageSRVI implements MyPageSRV {
                     Map.of("gender", request.getGender()));
         }
 
-        String birthday = normalizeBirthday(request.getBirthday());
+        String birthday = request.getBirthday() != null
+            ? normalizeBirthday(request.getBirthday()) : null;
 
         m.changeProfile(
                 request.getNickName(),
