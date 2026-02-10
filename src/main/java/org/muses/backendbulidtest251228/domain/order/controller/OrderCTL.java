@@ -85,7 +85,24 @@ public class OrderCTL {
 
     @Operation(
             summary = "주문 취소 (전체 취소)",
-            description = "해당 주문 전체를 취소하고 빌링키를 삭제합니다"
+            description = "해당 주문 전체를 취소하고, 연관된 빌링키를 삭제합니다.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "주문 전체 취소 성공",
+                            content = @io.swagger.v3.oas.annotations.media.Content(
+                                    mediaType = "application/json",
+                                    schema = @io.swagger.v3.oas.annotations.media.Schema(
+                                            example = """
+                                        {
+                                          "success": true,
+                                          "data": "OK"
+                                        }
+                                        """
+                                    )
+                            )
+                    )
+            }
     )
     @DeleteMapping("/cancel/all/{orderId}")
     public ApiResponse<?> cancelAllOrder(@Parameter(description = "취소할 주문 ID", example = "1")
