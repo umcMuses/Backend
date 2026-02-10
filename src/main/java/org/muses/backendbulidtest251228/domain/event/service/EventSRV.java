@@ -59,8 +59,13 @@ public class EventSRV {
                 event.getUploadDateTime()
         );
 
-        Long prevId = eventRepo.findPrevId(event.getUploadDateTime(), event.getId()).orElse(null);
-        Long nextId = eventRepo.findNextId(event.getUploadDateTime(), event.getId()).orElse(null);
+        Long prevId = eventRepo
+                .findPrevIds(event.getUploadDateTime(), event.getId(), PageRequest.of(0, 1))
+                .stream().findFirst().orElse(null);
+
+        Long nextId = eventRepo
+                .findNextIds(event.getUploadDateTime(), event.getId(), PageRequest.of(0, 1))
+                .stream().findFirst().orElse(null);
 
         EventDetailResDTO res = new EventDetailResDTO(eventDto, prevId, nextId);
 
