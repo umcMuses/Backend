@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.muses.backendbulidtest251228.domain.event.dto.EventDetailResDTO;
 import org.muses.backendbulidtest251228.domain.event.dto.EventResDTO;
 import org.muses.backendbulidtest251228.domain.event.service.EventSRV;
 import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
@@ -51,7 +52,7 @@ public class EventCTL {
             description = "이벤트 ID를 이용해 이벤트 상세 정보를 조회합니다."
     )
     @GetMapping("/{eventId}")
-    public ApiResponse<?> eventDetail(
+    public ApiResponse<EventDetailResDTO> eventDetail(
             @Parameter(description = "이벤트 ID", example = "1")
             @PathVariable Long eventId
     ) {
