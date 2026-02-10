@@ -51,7 +51,24 @@ public class SettlementCTL {
 
     @Operation(
             summary = "정산 지급 완료 처리",
-            description = "settlementId에 해당하는 정산 상태를 COMPLETED(지급 완료)로 변경합니다."
+            description = "settlementId에 해당하는 정산 상태를 COMPLETED(지급 완료)로 변경합니다.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "정산 지급 완료 처리 성공",
+                            content = @io.swagger.v3.oas.annotations.media.Content(
+                                    mediaType = "application/json",
+                                    schema = @io.swagger.v3.oas.annotations.media.Schema(
+                                            example = """
+                                        {
+                                          "success": true,
+                                          "data": "OK"
+                                        }
+                                        """
+                                    )
+                            )
+                    )
+            }
     )
     @PostMapping("/payout")
     public ApiResponse<String> payout(
