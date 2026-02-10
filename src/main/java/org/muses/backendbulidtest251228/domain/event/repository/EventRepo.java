@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface EventRepo extends JpaRepository<Event, Long> {
@@ -48,37 +49,36 @@ public interface EventRepo extends JpaRepository<Event, Long> {
 
 
 
-    // prev = 더 최근(업로드시간 더 큼) 중 가장 가까운 1개
     @Query("""
-        select e.id
-        from Event e
-        where e.uploadDateTime <= current_timestamp
-          and (
-                e.uploadDateTime > :currentUpload
-                or (e.uploadDateTime = :currentUpload and e.id > :currentId)
-          )
-        order by e.uploadDateTime asc, e.id asc
-    """)
-    Optional<Long> findPrevId(
+    select e.id
+    from Event e
+    where e.uploadDateTime <= current_timestamp
+      and (
+            e.uploadDateTime > :currentUpload
+            or (e.uploadDateTime = :currentUpload and e.id > :currentId)
+      )
+    order by e.uploadDateTime asc, e.id asc
+""")
+    List<Long> findPrevIds(
             @Param("currentUpload") LocalDateTime currentUpload,
             @Param("currentId") Long currentId,
             Pageable pageable
     );
 
-    // next = 더 오래된(업로드시간 더 작음) 중 가장 가까운 1개
     @Query("""
-        select e.id
-        from Event e
-        where e.uploadDateTime <= current_timestamp
-          and (
-                e.uploadDateTime < :currentUpload
-                or (e.uploadDateTime = :currentUpload and e.id < :currentId)
-          )
-        order by e.uploadDateTime desc, e.id desc
-    """)
-    Optional<Long> findNextId(
+    select e.id
+    from Event e
+    where e.uploadDateTime <= current_timestamp
+      and (
+            e.uploadDateTime < :currentUpload
+            or (e.uploadDateTime = :currentUpload and e.id < :currentId)
+      )
+    order by e.uploadDateTime desc, e.id desc
+""")
+    List<Long> findNextIds(
             @Param("currentUpload") LocalDateTime currentUpload,
             @Param("currentId") Long currentId,
             Pageable pageable
     );
+
 }
