@@ -35,7 +35,6 @@ public class Member extends BaseEntity {
 	private Provider provider;
 	@Column(name = "provider_id")
 	private String providerId;
-	private String passwd;
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
 	private Role role;
@@ -43,9 +42,9 @@ public class Member extends BaseEntity {
 	private String name;
 	@Column(nullable = false, unique = true)
 	private String email;
-	@Column(name = "phone_number", length = 20)
-	private String phoneNumber;
-	// -- 프로필 설정 --
+	// Local 회원가입 (Nullable)
+	private String passwd;
+	// ======== 프로필 설정 ========
 	@Column(name = "profile_img_url")
 	private String profileImgUrl;
 	@Column(name = "nick_name", unique = true)
@@ -54,6 +53,10 @@ public class Member extends BaseEntity {
 	private String introduction;
 	private String birthday;
 	private Integer gender;
+
+	// TODO: 회원가입, 온보딩에서 받지 않음(현재 NULL)
+	@Column(name = "phone_number", length = 20)
+	private String phoneNumber;
 
 	@Builder.Default
 	@ColumnDefault("0")
@@ -70,11 +73,10 @@ public class Member extends BaseEntity {
 
 	// -- 생성자 --
 	@Builder
-	public Member(String email, String passwd, String name, String phoneNumber, String providerId, Role role) {
+	public Member(String email, String passwd, String name, String providerId, Role role) {
 		this.email = email;
 		this.passwd = passwd;
 		this.name = name;
-		this.phoneNumber = phoneNumber;
 		this.providerId = providerId;
 		this.role = role;
 	}

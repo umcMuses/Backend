@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import static org.muses.backendbulidtest251228.global.utils.DateUtil.normalizeBirthday;
 
 import java.util.Map;
 import java.util.Set;
@@ -56,10 +57,12 @@ public class MyPageSRVI implements MyPageSRV {
                     Map.of("gender", request.getGender()));
         }
 
+        String birthday = normalizeBirthday(request.getBirthday());
+
         m.changeProfile(
                 request.getNickName(),
                 request.getIntroduction(),
-                request.getBirthday(),
+                birthday,
                 request.getGender()
         );
 

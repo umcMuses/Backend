@@ -1,7 +1,5 @@
 package org.muses.backendbulidtest251228.domain.member.service;
 
-import static org.muses.backendbulidtest251228.domain.mypage.service.MyPageSRVI.*;
-
 import java.util.Map;
 import java.util.Set;
 
@@ -22,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import lombok.RequiredArgsConstructor;
+import static org.muses.backendbulidtest251228.global.utils.DateUtil.normalizeBirthday;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +43,6 @@ public class AuthSV {
 		Member member = Member.builder()
 			.name(request.getName())
 			.email(request.getEmail())
-			.phoneNumber(request.getPhoneNumber())
 			.passwd(passwordEncoder.encode(request.getPassword()))
 			.role(Role.GUEST)
 			.provider(Provider.LOCAL)
@@ -103,13 +101,15 @@ public class AuthSV {
 			AttachmentENT saved = attachmentSRV.upload(PROFILE_TARGET_TYPE, member.getId(), profileImg);
 			profileImgUrl = saved.getFileUrl();
 		}
+		String birthday = normalizeBirthday(request.getBirthday());
+
 		// 업데이트, role 변경
 		member.completeSignup(
 			profileImgUrl,
 			request.getNickName(),
 			request.getIntroduction(),
-			request.getBirthday(),
-			Integer.valueOf(request.getGender())
+			birthday,
+			request.getGender()
 		);
 		String newAccessToken = jwtTokenProvider.createToken(member.getEmail(), member.getRole().name());
 		return new AuthResponseDT.TokenResponse(newAccessToken, "", member.getRole(), member.getName());
