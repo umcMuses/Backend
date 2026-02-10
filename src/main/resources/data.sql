@@ -4,15 +4,15 @@ VALUES (NOW(), NOW(), 'lys0000@google.com', '1223', '박지성', 'GUEST', 'LOCAL
 
 -- 1. 관리자 계정 (ADMIN)
 INSERT INTO members (created_at, updated_at, email, passwd, name, nick_name, introduction, birthday, gender, role, provider)
-VALUES (NOW(), NOW(), 'admin@muses.com', '0000', '뮤즈관리자', 'AdminMuse', '안녕하세요.', '20030813', 0,'ADMIN', 'LOCAL');
+VALUES (NOW(), NOW(), 'admin@muses.com', '0000', '뮤즈관리자', 'AdminMuse', '안녕하세요.', '2003-08-13', 0,'ADMIN', 'LOCAL');
 
 -- 2. 일반 사용자 1 (MAKER)
 INSERT INTO members (created_at, updated_at, email, passwd, name, nick_name, introduction, birthday, gender, role, provider)
-VALUES (NOW(), NOW(), 'maker@muses.com', '0000', '김철수', 'RapperLee', '반가워요 메이커입니다.','20001223',0,'MAKER', 'LOCAL');
+VALUES (NOW(), NOW(), 'maker@muses.com', '0000', '김철수', 'RapperLee', '반가워요 메이커입니다.','2000-12-23',0,'MAKER', 'LOCAL');
 
 -- 3. 일반 사용자 2 (CREATOR)
 INSERT INTO members (created_at, updated_at, email, passwd, name, nick_name, introduction, birthday, gender, role, provider)
-VALUES (NOW(), NOW(), 'creator@muses.com', '0000', '이유리', 'MusicLover', '저는 뮤지션이에요', '19970201', 1,'CREATOR', 'LOCAL');
+VALUES (NOW(), NOW(), 'creator@muses.com', '0000', '이유리', 'MusicLover', '저는 뮤지션이에요', '1997-02-01', 1,'CREATOR', 'LOCAL');
 
 -- 4. 소셜 로그인 사용자
 -- INSERT INTO members (created_at, updated_at, email, password, name, nickname, role, provider)
