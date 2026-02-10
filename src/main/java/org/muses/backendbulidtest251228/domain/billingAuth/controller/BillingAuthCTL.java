@@ -24,7 +24,24 @@ public class BillingAuthCTL {
     // 빌링키 생성
     @Operation(
             summary = "빌링키 발급",
-            description = "프론트에서 받은 authKey 기반으로 PG에 요청하여 billingKey를 발급한다."
+            description = "프론트에서 받은 authKey 기반으로 PG에 요청하여 billingKey를 발급한다.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "빌링키 발급 성공",
+                            content = @io.swagger.v3.oas.annotations.media.Content(
+                                    mediaType = "application/json",
+                                    schema = @io.swagger.v3.oas.annotations.media.Schema(
+                                            example = """
+                                        {
+                                          "success": true,
+                                          "data": "OK"
+                                        }
+                                        """
+                                    )
+                            )
+                    )
+            }
     )
     @PostMapping("/issue")
     public ApiResponse<String> issueBillingKey(
