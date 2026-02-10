@@ -61,7 +61,8 @@ public interface EventRepo extends JpaRepository<Event, Long> {
     """)
     Optional<Long> findPrevId(
             @Param("currentUpload") LocalDateTime currentUpload,
-            @Param("currentId") Long currentId
+            @Param("currentId") Long currentId,
+            Pageable pageable
     );
 
     // next = 더 오래된(업로드시간 더 작음) 중 가장 가까운 1개
@@ -77,6 +78,7 @@ public interface EventRepo extends JpaRepository<Event, Long> {
     """)
     Optional<Long> findNextId(
             @Param("currentUpload") LocalDateTime currentUpload,
-            @Param("currentId") Long currentId
+            @Param("currentId") Long currentId,
+            Pageable pageable
     );
 }
