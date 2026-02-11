@@ -17,6 +17,13 @@ public interface TicketRepo extends JpaRepository<TicketENT, Long> {
     @Query("""
     select t
     from TicketENT t
+    where t.orderItem = :orderItem
+""")
+    List<TicketENT> findAllByOrderItem(@Param("orderItem") OrderItemENT orderItem);
+
+    @Query("""
+    select t
+    from TicketENT t
     join fetch t.orderItem
     where t.id = :ticketId
 """)

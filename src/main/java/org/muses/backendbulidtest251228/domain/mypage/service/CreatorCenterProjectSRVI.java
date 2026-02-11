@@ -5,15 +5,21 @@ import org.muses.backendbulidtest251228.domain.member.entity.Member;
 import org.muses.backendbulidtest251228.domain.member.repository.MemberRepo;
 import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorCenterProjectResDT;
 import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorCenterProjectReqDT;
+import org.muses.backendbulidtest251228.domain.mypage.enums.QrStatus;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.orderItem.entity.OrderItemENT;
 import org.muses.backendbulidtest251228.domain.project.entity.ProjectENT;
 import org.muses.backendbulidtest251228.domain.project.entity.ProjectTagENT;
 import org.muses.backendbulidtest251228.domain.project.entity.RewardENT;
+import org.muses.backendbulidtest251228.domain.project.enums.FundingStatus;
+import org.muses.backendbulidtest251228.domain.project.enums.RewardType;
 import org.muses.backendbulidtest251228.domain.project.repository.ProjectRepo;
 import org.muses.backendbulidtest251228.domain.project.repository.ProjectTagRepo;
 import org.muses.backendbulidtest251228.domain.project.repository.RewardRepo;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
+import org.muses.backendbulidtest251228.domain.ticket.entity.TicketENT;
+import org.muses.backendbulidtest251228.domain.ticket.enums.TicketStatus;
+import org.muses.backendbulidtest251228.domain.ticket.repository.TicketRepo;
 import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
 import org.muses.backendbulidtest251228.global.businessError.BusinessException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -40,6 +46,8 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
 
     private final OrderREP orderREP;
     private final RewardRepo rewardRepo;
+
+    private final TicketRepo ticketRepo;
 
     @Override
     public CreatorCenterProjectResDT.MyProjectListResponse getMyProjects(UserDetails userDetails) {
@@ -184,7 +192,11 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
 
             List<OrderItemENT> items = (o.getOrderItems() == null) ? List.of() : o.getOrderItems();
 
-            for (OrderItemENT it : items) {
+            int totalQty = 0;
+
+            java.util.Set<String> rewardNames = new java.util.LinkedHashSet<>();
+
+            /*for (OrderItemENT it : items) {
                 Long rewardId = it.getRewardId();
                 RewardENT reward = (rewardId == null) ? null : rewardRepo.findById(rewardId).orElse(null);
                 String rewardName = (reward == null) ? null : reward.getRewardName();
@@ -199,16 +211,91 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
                         .rewardName(rewardName)
                         .qrStatus("NONE")
                         .build());
+            }*/
+
+            for (OrderItemENT it : items) {
+                if (it == null) continue;
+
+                Integer q = it.getQuantity();
+                if (q != null) totalQty += q;
+
+                Long rewardId = it.getRewardId();
+                if (rewardId != null) {
+                    RewardENT reward = rewardRepo.findById(rewardId).orElse(null);
+                    if (reward != null && reward.getRewardName() != null) {
+                        rewardNames.add(reward.getRewardName());
+                    }
+                }
             }
+
+            String rewardNameJoined = rewardNames.isEmpty()
+                    ? null
+                    : String.join(", ", rewardNames);
+
+            QrStatus qrStatus = resolveQrStatus(project, items);
+
+            rows.add(CreatorCenterProjectResDT.MakerRow.builder()
+                    .memberId(memberId)
+                    .orderId(o.getId())  // orderId 추가
+                    .nickname(nickname)
+                    .name(name)
+                    .phone(phone)
+                    .email(email)
+                    .quantity(totalQty)
+                    .rewardName(rewardNameJoined)
+                    .qrStatus(qrStatus)
+                    .build());
         }
 
         return CreatorCenterProjectResDT.MakerListResponse.builder()
                 .projectId(projectId)
                 .items(rows)
                 .build();
+
+
     }
 
     // 내부
+
+    private QrStatus resolveQrStatus(ProjectENT project, List<OrderItemENT> items) {
+
+        // 1) QR 티켓 리워드가 있는지
+        List<OrderItemENT> ticketItems = new ArrayList<>();
+
+        for (OrderItemENT it : items) {
+            RewardENT reward = rewardRepo.findById(it.getRewardId()).orElse(null);
+            if (reward != null && reward.getType() == RewardType.TICKET) {
+                ticketItems.add(it);
+            }
+        }
+
+        // QR 티켓 자체가 없음
+        if (ticketItems.isEmpty()) {
+            return QrStatus.NONE;
+        }
+
+        // 2) 펀딩 성공이 아닌 경우 → 무조건 ACTIVE
+        if (project.getFundingStatus() != FundingStatus.SUCCESS) {
+            return QrStatus.ACTIVE;
+        }
+
+        // 3) 펀딩 성공인 경우 → 티켓 상태 확인
+        boolean hasActiveTicket = false;
+
+        for (OrderItemENT it : ticketItems) {
+            List<TicketENT> tickets = ticketRepo.findAllByOrderItem(it);
+
+            for (TicketENT t : tickets) {
+                if (t.getStatus() == TicketStatus.UNUSED) {
+                    hasActiveTicket = true;
+                    break;
+                }
+            }
+            if (hasActiveTicket) break;
+        }
+
+        return hasActiveTicket ? QrStatus.ACTIVE : QrStatus.INACTIVE;
+    }
 
     private Member resolveMember(UserDetails userDetails) {
         if (userDetails == null || userDetails.getUsername() == null || userDetails.getUsername().isBlank()) {
