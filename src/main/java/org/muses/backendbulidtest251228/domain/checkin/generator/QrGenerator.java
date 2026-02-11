@@ -45,13 +45,16 @@ public class QrGenerator {
 
             // ticketUrl 예:
             // https://muses.site/checkin/{checkinToken}?t={ticketToken}
-            String qrText = ticketUrl
-                    + (ticketUrl.contains("?") ? "&" : "?")
-                    + "&ticketId=" + ticketId
-                    + "&name=" + URLEncoder.encode(member.getName(), StandardCharsets.UTF_8)
-                    + "&nick=" + URLEncoder.encode(member.getNickName(), StandardCharsets.UTF_8)
-                    + "&qty=" + orderItem.getQuantity()
-                    + "&reward=" + URLEncoder.encode(rewardENT.getRewardName(), StandardCharsets.UTF_8);
+            String qrText = org.springframework.web.util.UriComponentsBuilder
+                    .fromUriString(ticketUrl)
+                    .queryParam("ticketId", ticketId)
+                    .queryParam("name", member.getName())
+                    .queryParam("nick", member.getNickName())
+                    .queryParam("qty", orderItem.getQuantity())
+                    .queryParam("reward", rewardENT.getRewardName())
+                    .build()
+                    .encode(java.nio.charset.StandardCharsets.UTF_8)
+                    .toUriString();
 
 
             BitMatrix matrix = new MultiFormatWriter()
