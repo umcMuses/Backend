@@ -263,6 +263,7 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
         List<OrderItemENT> ticketItems = new ArrayList<>();
 
         for (OrderItemENT it : items) {
+            if (it.getRewardId() == null) continue;
             RewardENT reward = rewardRepo.findById(it.getRewardId()).orElse(null);
             if (reward != null && reward.getType() == RewardType.TICKET) {
                 ticketItems.add(it);
