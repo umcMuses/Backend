@@ -57,7 +57,7 @@ public class CheckinCTL {
             summary = "체크인 확정",
             description = "QR 스캔으로 전달된 ticketId를 사용해 체크인을 처리합니다."
     )
-    @GetMapping ("/result")
+    @PostMapping ("/result")
     public ApiResponse<CheckinConfirmResDTO> confirm(
             @RequestParam("ticketId") Long ticketId,
             @RequestParam("name") String name,
@@ -70,47 +70,11 @@ public class CheckinCTL {
         return ApiResponse.success(confirm);
     }
 
-    /**
-     * 관리자용 체크인 전용 URL을 조회한다
-     * 프로젝트당 하나의 체크인 링크만 존재한다
-     */
-    @Operation(
-            summary = "프로젝트 체크인 링크 생성/조회",
-            description = "프로젝트별 체크인 전용 URL을 생성하거나 이미 존재하면 기존 링크를 반환합니다.",
-            responses = {
-                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
-                            responseCode = "200",
-                            description = "체크인 링크 생성/조회 성공",
-                            content = @io.swagger.v3.oas.annotations.media.Content(
-                                    mediaType = "application/json",
-                                    schema = @io.swagger.v3.oas.annotations.media.Schema(
-                                            example = """
-                                        {
-                                          "success": true,
-                                          "data": {
-                                            "checkinUrl": "https://mymuses.site/checkin/abc123XYZ"
-                                          }
-                                        }
-                                        """
-                                    )
-                            )
-                    )
-            }
-    )
-    @PostMapping("/projects/{projectId}/link")
-    public ApiResponse<Map<String, Object>> createCheckinLink(
-            @PathVariable Long projectId
-    ) {
 
-        String checkinUrl = linkService.createOrGetLink(projectId, baseUrl);
-
-        return ApiResponse.success(Map.of("checkinUrl", checkinUrl));
-    }
 
 
     /**
      * 관람객 티켓용 QR 생성
-     * - QR 안에는 ticketToken 문자열만 들어간다
      * - 스태프 체크인 페이지에서 스캔해서 사용
      */
     @Operation(
@@ -187,6 +151,44 @@ public class CheckinCTL {
         return ApiResponse.success(Map.of(
                 "ticketToken", ticketToken
         ));
+    }
+
+
+    /**
+     * 관리자용 체크인 전용 URL을 조회한다
+     * 프로젝트당 하나의 체크인 링크만 존재한다
+     */
+    @Operation(
+            summary = "프로젝트 체크인 링크 생성/조회",
+            description = "프로젝트별 체크인 전용 URL을 생성하거나 이미 존재하면 기존 링크를 반환합니다.",
+            responses = {
+                    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                            responseCode = "200",
+                            description = "체크인 링크 생성/조회 성공",
+                            content = @io.swagger.v3.oas.annotations.media.Content(
+                                    mediaType = "application/json",
+                                    schema = @io.swagger.v3.oas.annotations.media.Schema(
+                                            example = """
+                                        {
+                                          "success": true,
+                                          "data": {
+                                            "checkinUrl": "https://mymuses.site/checkin/abc123XYZ"
+                                          }
+                                        }
+                                        """
+                                    )
+                            )
+                    )
+            }
+    )
+    @PostMapping("/projects/{projectId}/link")
+    public ApiResponse<Map<String, Object>> createCheckinLink(
+            @PathVariable Long projectId
+    ) {
+
+        String checkinUrl = linkService.createOrGetLink(projectId, baseUrl);
+
+        return ApiResponse.success(Map.of("checkinUrl", checkinUrl));
     }
 
 
