@@ -52,4 +52,26 @@ public interface TicketRepo extends JpaRepository<TicketENT, Long> {
      order by o.createdAt desc
 """)
     List<TicketENT> findMyTickets(@Param("memberId") Long memberId);
+
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update TicketENT t
+           set t.status = org.muses.backendbulidtest251228.domain.ticket.enums.TicketStatus.USED,
+               t.usedAt = CURRENT_TIMESTAMP
+         where t.orderItem.id in :orderItemIds
+           and t.status = org.muses.backendbulidtest251228.domain.ticket.enums.TicketStatus.UNUSED
+    """)
+    int deactivateUnusedTicketsByOrderItemIds(@Param("orderItemIds") List<Long> orderItemIds);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update TicketENT t
+           set t.status = org.muses.backendbulidtest251228.domain.ticket.enums.TicketStatus.UNUSED,
+               t.usedAt = null
+         where t.orderItem.id in :orderItemIds
+           and t.status = org.muses.backendbulidtest251228.domain.ticket.enums.TicketStatus.USED
+    """)
+    int activateUsedTicketsByOrderItemIds(@Param("orderItemIds") List<Long> orderItemIds);
+
 }

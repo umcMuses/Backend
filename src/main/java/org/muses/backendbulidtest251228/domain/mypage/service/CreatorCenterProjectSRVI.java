@@ -255,6 +255,120 @@ public class CreatorCenterProjectSRVI implements CreatorCenterProjectSRV {
 
     }
 
+    @Override
+    @Transactional //  write
+    public void changeQrStatus(UserDetails userDetails, Long projectId, Long orderId, QrStatus qrStatus) {
+
+        // 1) NONE이면 수정 불가
+        if (qrStatus == QrStatus.NONE) {
+            throw new BusinessException(
+                    ErrorCode.BAD_REQUEST,
+                    "QR 현황을 수정할 수 없습니다. (해당 없음)",
+                    Map.of("projectId", projectId, "orderId", orderId, "qrStatus", qrStatus)
+            );
+        }
+
+        Member me = resolveMember(userDetails);
+
+        // 프로젝트 조회 + 내 프로젝트인지 검증
+        ProjectENT project = projectRepo.findById(projectId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.NOT_FOUND,
+                        "프로젝트를 찾을 수 없습니다.",
+                        Map.of("projectId", projectId)
+                ));
+
+        if (!Objects.equals(project.getMember().getId(), me.getId())) {
+            throw new BusinessException(
+                    ErrorCode.FORBIDDEN,
+                    "내 프로젝트만 수정할 수 있습니다.",
+                    Map.of("projectId", projectId)
+            );
+        }
+
+        // 2) 펀딩 성공이 아니면 수정 불가
+        if (project.getFundingStatus() != FundingStatus.SUCCESS) {
+            throw new BusinessException(
+                    ErrorCode.BAD_REQUEST,
+                    "펀딩 성공 상태에서만 QR 현황을 수정할 수 있습니다.",
+                    Map.of("projectId", projectId, "fundingStatus", project.getFundingStatus())
+            );
+        }
+
+        // 주문 조회 + 프로젝트 소속 검증
+        OrderENT order = orderREP.findByIdWithItems(orderId)
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.NOT_FOUND,
+                        "주문을 찾을 수 없습니다.",
+                        Map.of("orderId", orderId)
+                ));
+
+        if (!Objects.equals(order.getProject().getId(), projectId)) {
+            throw new BusinessException(
+                    ErrorCode.BAD_REQUEST,
+                    "해당 프로젝트의 주문이 아닙니다.",
+                    Map.of("projectId", projectId, "orderId", orderId)
+            );
+        }
+
+        List<OrderItemENT> items = (order.getOrderItems() == null) ? List.of() : order.getOrderItems();
+
+        // 주문 상세 중 RewardType.TICKET 인 orderItem만 추출
+        // (OrderItem에는 reward 연관관계가 없어서 rewardId로 Reward 조회해서 필터링)
+        List<Long> rewardIds = items.stream()
+                .map(OrderItemENT::getRewardId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList();
+
+        Map<Long, RewardENT> rewardMap = rewardRepo.findAllById(rewardIds).stream()
+                .collect(java.util.stream.Collectors.toMap(RewardENT::getId, r -> r));
+
+        List<Long> ticketOrderItemIds = new ArrayList<>();
+        for (OrderItemENT it : items) {
+            Long rid = it.getRewardId();
+            RewardENT r = (rid == null) ? null : rewardMap.get(rid);
+            if (r != null && r.getType() == RewardType.TICKET) {
+                ticketOrderItemIds.add(it.getId());
+            }
+        }
+
+        // 1번 정책의 확장: 주문에 QR 티켓이 하나도 없으면 -> 해당 없음이므로 수정 불가
+        if (ticketOrderItemIds.isEmpty()) {
+            throw new BusinessException(
+                    ErrorCode.BAD_REQUEST,
+                    "QR 티켓이 없는 주문은 QR 현황을 수정할 수 없습니다.",
+                    Map.of("projectId", projectId, "orderId", orderId)
+            );
+        }
+
+        // 3) SUCCESS 상태에서 토글 수행
+        int updated;
+        QrStatus after;
+
+        if (qrStatus == QrStatus.ACTIVE) {
+            // ACTIVE -> INACTIVE : UNUSED 티켓을 USED로 변경
+            updated = ticketRepo.deactivateUnusedTicketsByOrderItemIds(ticketOrderItemIds);
+            after = QrStatus.INACTIVE;
+
+        } else if (qrStatus == QrStatus.INACTIVE) {
+            // INACTIVE -> ACTIVE : USED 티켓을 UNUSED로 변경
+            updated = ticketRepo.activateUsedTicketsByOrderItemIds(ticketOrderItemIds);
+            after = QrStatus.ACTIVE;
+
+        } else {
+            // 방어 코드 (enum 확장 대비)
+            throw new BusinessException(
+                    ErrorCode.BAD_REQUEST,
+                    "지원하지 않는 QR 상태입니다.",
+                    Map.of("qrStatus", qrStatus)
+            );
+        }
+
+
+    }
+
+
     // 내부
 
     private QrStatus resolveQrStatus(ProjectENT project, List<OrderItemENT> items) {

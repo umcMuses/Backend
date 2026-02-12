@@ -3,6 +3,7 @@ package org.muses.backendbulidtest251228.domain.mypage.controller;
 import lombok.RequiredArgsConstructor;
 import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorCenterProjectResDT.*;
 import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorCenterProjectReqDT;
+import org.muses.backendbulidtest251228.domain.mypage.enums.QrStatus;
 import org.muses.backendbulidtest251228.domain.mypage.service.CreatorCenterProjectSRV;
 import org.muses.backendbulidtest251228.global.apiPayload.ApiResponse;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -73,5 +74,52 @@ public class CreatorCenterProjectCTL {
     ) {
         return ApiResponse.success(creatorCenterAnalyticsSRV.getProjectDashboard(userDetails, projectId));
     }
+
+
+    @Operation(
+            summary = "메이커 주문 QR 상태 변경",
+            description = """
+        메이커 명단에서 특정 주문의 QR 버튼 상태를 변경합니다.
+
+        동작 조건:
+        1. qrStatus가 NONE인 경우 → 수정 불가
+        2. 프로젝트의 펀딩 상태가 SUCCESS(펀딩 성공)가 아닌 경우 → 수정 불가
+        3. 펀딩 성공 상태인 경우:
+           - ACTIVE → 해당 주문의 QR 티켓(UNUSED)을 모두 USED로 변경 (비활성화)
+           - INACTIVE → 해당 주문의 QR 티켓(USED)을 모두 UNUSED로 변경 (활성화)
+
+        ※ QR 티켓이 없는 주문은 수정할 수 없습니다.
+        """)
+    @io.swagger.v3.oas.annotations.responses.ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "QR 상태 변경 성공"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "잘못된 요청 (NONE 상태 또는 펀딩 성공 아님)"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "403",
+                    description = "내 프로젝트가 아님"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "프로젝트 또는 주문을 찾을 수 없음"
+            )
+    })
+    @PostMapping("/creator-center/projects/{projectId}/makers/orderId/{orderId}/status/{qrStatus}")
+    public ApiResponse<Void> changeQrStatus(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long projectId,
+            @PathVariable Long orderId,
+            @PathVariable QrStatus qrStatus
+
+    ) {
+
+        creatorCenterProjectSRV.changeQrStatus(userDetails, projectId, orderId, qrStatus);
+        return ApiResponse.success(null);
+    }
+
 
 }
