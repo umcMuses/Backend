@@ -11,8 +11,7 @@ import io.swagger.v3.oas.models.servers.Server;
 
 @Configuration
 public class OpenApiConfig {
-	@Bean
-	@Primary
+    @Bean(name = "serverConfig")
 	public OpenAPI customOpenAPI() {
 		return new OpenAPI()
 			.servers(Arrays.asList(
