@@ -39,6 +39,9 @@ public class SwaggerConfig {
                 .info(apiInfo())
                 .servers(List.of(
                         new Server()
+                                .url("https://mymuses.site")
+                                .description("Production Server"),
+                        new Server()
                                 .url("http://localhost:" + serverPort)
                                 .description("로컬 서버")
                 ));
