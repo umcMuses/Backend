@@ -14,17 +14,34 @@ public interface TicketRepo extends JpaRepository<TicketENT, Long> {
 
     Optional<TicketENT> findByOrderItem(OrderItemENT orderItem);
 
-
-    @Modifying (clearAutomatically = true, flushAutomatically = true)
     @Query("""
-        update TicketENT t
-           set t.status = 'USED',
-               t.usedAt = CURRENT_TIMESTAMP
-         where t.ticketToken = :token
-           and t.status = 'UNUSED'
-    """)
-    int markUsedIfUnused(@Param("token") String token);
-// 내 티켓 리스트
+    select t
+    from TicketENT t
+    where t.orderItem = :orderItem
+""")
+    List<TicketENT> findAllByOrderItem(@Param("orderItem") OrderItemENT orderItem);
+
+    @Query("""
+    select t
+    from TicketENT t
+    join fetch t.orderItem
+    where t.id = :ticketId
+""")
+    Optional<TicketENT> findByIdWithOrderItem(@Param("ticketId") Long ticketId);
+
+
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+    update TicketENT t
+       set t.status = 'USED',
+           t.usedAt = CURRENT_TIMESTAMP
+     where t.id = :ticketId
+       and t.status = 'UNUSED'
+""")
+    int markUsedIfUnusedById(@Param("ticketId") Long ticketId);
+
+    // 내 티켓 리스트
     @Query("""
     select t
       from TicketENT t
@@ -35,4 +52,26 @@ public interface TicketRepo extends JpaRepository<TicketENT, Long> {
      order by o.createdAt desc
 """)
     List<TicketENT> findMyTickets(@Param("memberId") Long memberId);
+
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update TicketENT t
+           set t.status = org.muses.backendbulidtest251228.domain.ticket.enums.TicketStatus.USED,
+               t.usedAt = CURRENT_TIMESTAMP
+         where t.orderItem.id in :orderItemIds
+           and t.status = org.muses.backendbulidtest251228.domain.ticket.enums.TicketStatus.UNUSED
+    """)
+    int deactivateUnusedTicketsByOrderItemIds(@Param("orderItemIds") List<Long> orderItemIds);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+        update TicketENT t
+           set t.status = org.muses.backendbulidtest251228.domain.ticket.enums.TicketStatus.UNUSED,
+               t.usedAt = null
+         where t.orderItem.id in :orderItemIds
+           and t.status = org.muses.backendbulidtest251228.domain.ticket.enums.TicketStatus.USED
+    """)
+    int activateUsedTicketsByOrderItemIds(@Param("orderItemIds") List<Long> orderItemIds);
+
 }
