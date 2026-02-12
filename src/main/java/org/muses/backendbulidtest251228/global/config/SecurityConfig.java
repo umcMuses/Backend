@@ -43,7 +43,7 @@ public class SecurityConfig {
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
 				// Swagger 허용
-				.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
+				.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**","/api/landing").permitAll()
 				.requestMatchers("/api/auth/profile/**", "/api/users/me/**").authenticated()
 				.requestMatchers("/api/auth/**", "/oauth2/**", "/api/projects/**", "/api/alarms/**", "/api/events/**", "/health", "/error").permitAll()
 				.requestMatchers("/api/creators/**").hasRole("CREATOR")
