@@ -167,9 +167,13 @@ public class ProjectSRVI implements ProjectSRV {
                 .refundPolicy(content != null ? content.getRefundPolicy() : null)
                 .attachments(attachments)
                 // 5단계: 정보
+                .creatorName(project.getMember().getName())
+                .creatorNickName(project.getMember().getNickName())
                 .hostProfileImg(manager != null ? manager.getHostProfileImg() : null)
                 .hostPhone(manager != null ? manager.getHostPhone() : null)
                 .hostBio(manager != null ? manager.getHostBio() : null)
+                .managerName(manager != null ? manager.getManagerName() : null)
+                .managerPhone(manager != null ? manager.getManagerPhone() : null)
                 .documents(documents)
                 .makerDocuments(makerDocuments)
                 // 통계
@@ -207,6 +211,11 @@ public class ProjectSRVI implements ProjectSRV {
         // 첨부파일 중 첫 번째 이미지 URL 조회
         String attachmentImageUrl = attachmentSRV.getFirstImageUrl("PROJECT", project.getId());
 
+        // 태그 조회
+        List<String> tags = project.getProjectTags().stream()
+                .map(ProjectTagENT::getTagName)
+                .collect(Collectors.toList());
+
         return ProjectCardResponseDT.builder()
                 .projectId(project.getId())
                 .thumbnailUrl(project.getThumbnailUrl())
@@ -218,6 +227,8 @@ public class ProjectSRVI implements ProjectSRV {
                 .isScheduled(isScheduled)
                 .opening(project.getOpening())
                 .attachmentImageUrl(attachmentImageUrl)
+                .region(project.getRegion() != null ? project.getRegion().name() : null)
+                .tags(tags)
                 .build();
     }
 
@@ -239,10 +250,14 @@ public class ProjectSRVI implements ProjectSRV {
                 offset
         );
 
-        // 각 프로젝트에 첨부 이미지 URL 추가
+        // 각 프로젝트에 첨부 이미지 URL, 태그 추가
         List<ProjectCardResponseDT> projectsWithImages = projects.stream()
                 .map(card -> {
                     String attachmentImageUrl = attachmentSRV.getFirstImageUrl("PROJECT", card.getProjectId());
+                    List<String> tags = projectTagRepo.findByProjectId(card.getProjectId())
+                            .stream()
+                            .map(ProjectTagENT::getTagName)
+                            .collect(Collectors.toList());
                     return ProjectCardResponseDT.builder()
                             .projectId(card.getProjectId())
                             .thumbnailUrl(card.getThumbnailUrl())
@@ -254,6 +269,8 @@ public class ProjectSRVI implements ProjectSRV {
                             .isScheduled(card.getIsScheduled())
                             .opening(card.getOpening())
                             .attachmentImageUrl(attachmentImageUrl)
+                            .region(card.getRegion())
+                            .tags(tags)
                             .build();
                 })
                 .collect(Collectors.toList());

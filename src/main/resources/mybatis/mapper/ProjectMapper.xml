@@ -13,7 +13,8 @@
             datediff(p.deadline, now()) as dDay,
             p.funding_status as fundingStatus,
             case when p.funding_status = 'SCHEDULED' then true else false end as isScheduled,
-            p.opening
+            p.opening,
+            p.region
         from projects p
         where p.status not in ('DRAFT', 'PENDING')
         <if test="region != null and region != ''">
