@@ -2,6 +2,7 @@ package org.muses.backendbulidtest251228.domain.mypage.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
+import org.muses.backendbulidtest251228.domain.mypage.enums.QrStatus;
 import org.muses.backendbulidtest251228.domain.project.enums.FundingStatus;
 
 import java.math.BigDecimal;
@@ -97,14 +98,26 @@ public class CreatorCenterProjectResDT {
         @Schema(description = "구매 수량", example = "2")
         private Integer quantity;
 
-        @Schema(description = "리워드(옵션)명", example = "VIP 티켓")
+        @Schema(description = "리워드(옵션)명", example = "일반 티켓, VIP 티켓")
         private String rewardName;
 
         @Schema(
-                description = "QR 상태(서버에서 상태를 관리하지 않으면 NONE 고정)",
-                example = "NONE"
+                description = """
+        QR 버튼 상태
+
+        - NONE : 해당 주문에 QR 티켓 리워드가 없음
+        - ACTIVE :
+            • 펀딩 성공이 아닌 경우 → 항상 활성화
+            • 펀딩 성공인 경우 → 미사용(UNUSED) 티켓이 하나라도 있으면 활성화
+        - INACTIVE :
+            • 펀딩 성공 상태이며, 해당 주문의 모든 QR 티켓이 사용 완료(USED) 또는 취소(CANCELED)된 경우
+        """,
+                example = "ACTIVE"
         )
-        private String qrStatus;
+        private QrStatus qrStatus;
+
+        @Schema(description = "주문ID", example = "3")
+        private Long orderId;
     }
 
     @Getter

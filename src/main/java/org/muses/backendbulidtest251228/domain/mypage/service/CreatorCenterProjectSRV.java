@@ -2,6 +2,7 @@ package org.muses.backendbulidtest251228.domain.mypage.service;
 
 import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorCenterProjectResDT;
 import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorCenterProjectReqDT;
+import org.muses.backendbulidtest251228.domain.mypage.enums.QrStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public interface CreatorCenterProjectSRV {
@@ -16,4 +17,6 @@ public interface CreatorCenterProjectSRV {
     );
 
     CreatorCenterProjectResDT.MakerListResponse getProjectMakers(UserDetails userDetails, Long projectId);
+
+    void changeQrStatus(UserDetails userDetails, Long projectId, Long orderId, QrStatus qrStatus);
 }
