@@ -81,7 +81,8 @@ public class SecurityConfig {
 			"http://localhost:9095",
 			"http://localhost:9098",
 			"https://mymuses.site",
-			"https://www.mymuses.site"
+			"https://www.mymuses.site",
+                "https://umc-muses.netlify.app"
 		));
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
 		configuration.setAllowedHeaders(Arrays.asList("*"));
