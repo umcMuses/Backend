@@ -83,14 +83,26 @@ public class ProjectDetailResponseDT {
     private List<AttachmentResponseDT> attachments;
 
     // ========== 5단계: 정보 ==========
-    @Schema(description = "[5단계] 프로젝트 진행자 프로필 이미지 URL")
+    @Schema(description = "[5단계] 크리에이터(진행자) 이름", example = "이유리")
+    private String creatorName;
+
+    @Schema(description = "[5단계] 크리에이터(진행자) 닉네임", example = "MusicLover")
+    private String creatorNickName;
+
+    @Schema(description = "[5단계] 크리에이터 프로필 이미지 URL")
     private String hostProfileImg;
 
-    @Schema(description = "[5단계] 프로젝트 진행자 연락처", example = "010-1234-5678")
+    @Schema(description = "[5단계] 크리에이터 연락처", example = "010-1234-5678")
     private String hostPhone;
 
-    @Schema(description = "[5단계] 프로젝트 진행자 소개", example = "보컬을 맡고 있습니다")
+    @Schema(description = "[5단계] 크리에이터 소개", example = "보컬을 맡고 있습니다")
     private String hostBio;
+
+    @Schema(description = "[5단계] 담당자 이름", example = "김철수")
+    private String managerName;
+
+    @Schema(description = "[5단계] 담당자 연락처", example = "010-9876-5432")
+    private String managerPhone;
 
     @Schema(description = "[5단계] 정산 서류 목록")
     private List<AttachmentResponseDT> documents;

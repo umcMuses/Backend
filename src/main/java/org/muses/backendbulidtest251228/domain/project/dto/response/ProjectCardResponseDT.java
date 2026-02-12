@@ -4,12 +4,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Schema(description = "프로젝트 카드 응답 DTO - 목록 조회 시 각 프로젝트 카드에 표시되는 정보")
 @Getter
+@Setter
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor
 public class ProjectCardResponseDT {
 
@@ -46,4 +51,10 @@ public class ProjectCardResponseDT {
 
     @Schema(description = "첨부파일 중 첫 번째 이미지 URL (없으면 null)")
     private String attachmentImageUrl;
+
+    @Schema(description = "공연/행사 지역", example = "SEOUL")
+    private String region;
+
+    @Schema(description = "프로젝트 태그 목록", example = "[\"음악\", \"콘서트\"]")
+    private List<String> tags;
 }
