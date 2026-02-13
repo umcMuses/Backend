@@ -48,11 +48,15 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
 		String accessToken = jwtTokenProvider.createToken(member.getEmail(), member.getRole().name());
 
-		String targetUrl = UriComponentsBuilder.fromUriString(baseUrl + "/auth/callback")
+		String targetUrl = UriComponentsBuilder.fromUriString(baseUrl)
+			.path("/auth/callback")
 			.fragment("accessToken=" + accessToken + "&role=" + member.getRole().name())
 			.build()
 			.encode(StandardCharsets.UTF_8)
 			.toUriString();
+
+		clearAuthenticationAttributes(request);
+		logger.info("Generated Redirect URL: " + targetUrl);
 
 		getRedirectStrategy().sendRedirect(request, response, targetUrl);
 	}
