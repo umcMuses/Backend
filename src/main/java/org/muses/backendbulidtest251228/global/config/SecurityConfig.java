@@ -44,10 +44,10 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 				// Swagger 허용
 				.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**","/api/landing").permitAll()
-                    // QR 화면 허용
-                    .requestMatchers("/api/checkin/result", "/checkin/result").permitAll()
+				// QR 화면 허용
+				.requestMatchers("/api/checkin/result", "/checkin/result").permitAll()
 				.requestMatchers("/api/auth/profile/**", "/api/users/me/**").authenticated()
-				.requestMatchers("/api/auth/**", "/oauth2/**", "/api/projects/**", "/api/alarms/**", "/api/events/**", "/health", "/error").permitAll()
+				.requestMatchers("/login/**", "/auth/callback", "/api/auth/**", "/oauth2/**", "/api/projects/**", "/api/alarms/**", "/api/events/**", "/health", "/error").permitAll()
 				.requestMatchers("/api/creators/**").hasRole("CREATOR")
 				.requestMatchers("/api/admin/**").hasRole("ADMIN")
 				// TODO 정적 파일 (업로드된 이미지) 허용
