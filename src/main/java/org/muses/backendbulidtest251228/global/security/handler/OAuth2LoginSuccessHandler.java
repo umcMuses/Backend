@@ -8,6 +8,7 @@ import org.muses.backendbulidtest251228.domain.member.entity.Member;
 import org.muses.backendbulidtest251228.domain.member.repository.MemberRepo;
 import org.muses.backendbulidtest251228.global.jwt.JwtTokenProvider;
 import org.muses.backendbulidtest251228.global.security.PrincipalDetails;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -27,6 +28,9 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 	private final JwtTokenProvider jwtTokenProvider;
 	private final MemberRepo memberRepo;
 
+	@Value("${app.base-url}")
+	private String baseUrl;
+
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
 			throws IOException, ServletException {
@@ -44,12 +48,15 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
 		String accessToken = jwtTokenProvider.createToken(member.getEmail(), member.getRole().name());
 
-		// TODO: 추후 프론트 리다이렉트 URL 변경
-		String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:9098/login/success-test")
+		String targetUrl = UriComponentsBuilder.fromUriString(baseUrl)
+			.path("/auth/callback")
 			.fragment("accessToken=" + accessToken + "&role=" + member.getRole().name())
 			.build()
 			.encode(StandardCharsets.UTF_8)
 			.toUriString();
+
+		clearAuthenticationAttributes(request);
+		logger.info("Generated Redirect URL: " + targetUrl);
 
 		getRedirectStrategy().sendRedirect(request, response, targetUrl);
 	}
