@@ -2,6 +2,7 @@ package org.muses.backendbulidtest251228.domain.order.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.muses.backendbulidtest251228.domain.alarm.service.AlarmSRVI;
 import org.muses.backendbulidtest251228.domain.billingAuth.entity.BillingAuthENT;
 import org.muses.backendbulidtest251228.domain.billingAuth.repository.BillingAuthREP;
 import org.muses.backendbulidtest251228.domain.order.dto.OrderCreateReqDT;
@@ -10,8 +11,11 @@ import org.muses.backendbulidtest251228.domain.order.dto.OrderItemReqDT;
 import org.muses.backendbulidtest251228.domain.order.entity.OrderENT;
 import org.muses.backendbulidtest251228.domain.order.enums.OrderStatus;
 import org.muses.backendbulidtest251228.domain.orderItem.repository.OrderItemREP;
+import org.muses.backendbulidtest251228.domain.project.entity.RewardENT;
+import org.muses.backendbulidtest251228.domain.project.enums.RewardType;
 import org.muses.backendbulidtest251228.domain.project.repository.RewardRepo;
 import org.muses.backendbulidtest251228.domain.settlement.repository.SettlementRepo;
+import org.muses.backendbulidtest251228.domain.ticket.service.TicketIssueSRV;
 import org.muses.backendbulidtest251228.global.apiPayload.code.ErrorCode;
 import org.muses.backendbulidtest251228.global.businessError.BusinessException;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
@@ -45,6 +49,9 @@ public class OrderSRV {
     private final ProjectStatSRV projectStatSRV;
 
     private final TossBillingClient tossBillingClient;
+
+    private final AlarmSRVI alarmSRVI;
+    private final TicketIssueSRV ticketIssueSRV;
 
 
     @Transactional
@@ -109,6 +116,38 @@ public class OrderSRV {
 
 
         projectStatSRV.recalc(project);
+
+        //  여기서 티켓 발행 / 알림 적재를 진행
+        for (OrderItemENT item : saved.getOrderItems()) {
+            Long rewardId = item.getRewardId();
+
+            RewardENT reward = rewardRepo.findById(rewardId)
+                    .orElseThrow(() -> new BusinessException(
+                            ErrorCode.BAD_REQUEST,
+                            "해당 리워드를 찾을 수 없습니다.",
+                            Map.of("rewardId", rewardId, "orderId", saved.getId(), "projectId", project.getId())
+                    ));
+
+            if (reward.getType() == RewardType.NONE) {
+                // 주문 시점에 보내는게 맞는지 한 번만 체크
+                alarmSRVI.send(
+                        saved.getMember().getId(),
+                        4L,
+                        Map.of("projectName", saved.getProject().getTitle())
+                );
+                continue;
+            }
+
+            // 티켓 발행 (idempotent하게)
+            ticketIssueSRV.issueIfAbsent(item);
+
+            // 2번 템플릿(QR 발급)
+            alarmSRVI.send(
+                    saved.getMember().getId(),
+                    2L,
+                    Map.of("projectName", saved.getProject().getTitle())
+            );
+        }
 
 
 
