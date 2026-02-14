@@ -128,24 +128,22 @@ public class OrderSRV {
                             Map.of("rewardId", rewardId, "orderId", saved.getId(), "projectId", project.getId())
                     ));
 
-            if (reward.getType() == RewardType.NONE) {
-                // 주문 시점에 보내는게 맞는지 한 번만 체크
-                alarmSRVI.send(
-                        saved.getMember().getId(),
-                        4L,
-                        Map.of("projectName", saved.getProject().getTitle())
-                );
-                continue;
+            if (reward.getType() == RewardType.TICKET) {
+                // 티켓 발행 (idempotent하게)
+                ticketIssueSRV.issueIfAbsent(item);
             }
 
-            // 티켓 발행 (idempotent하게)
-            ticketIssueSRV.issueIfAbsent(item);
+
 
             // 2번 템플릿(QR 발급)
             alarmSRVI.send(
                     saved.getMember().getId(),
-                    7L,
-                    Map.of("projectName", saved.getProject().getTitle())
+                    6L,
+                    Map.of(
+                            "projectName", saved.getProject().getTitle(),
+                            "rewardName", reward.getRewardName()
+                    )
+
             );
         }
 
