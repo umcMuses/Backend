@@ -27,13 +27,13 @@ public class OrderCreateResDT {
 
     @Schema(
             description = "결제 성공 시 이동할 프론트엔드 URL",
-            example = "https://muses.com/billing/success"
+            example = "https://umc-muses.netlify.app/billing/success"
     )
     private String successUrl;
 
     @Schema(
             description = "결제 실패 시 이동할 프론트엔드 URL",
-            example = "https://muses.com/billing/fail"
+            example = "https://umc-muses.netlify.app/billing/fail"
     )
     private String failUrl;
 }
