@@ -144,7 +144,7 @@ public class OrderSRV {
             // 2번 템플릿(QR 발급)
             alarmSRVI.send(
                     saved.getMember().getId(),
-                    2L,
+                    7L,
                     Map.of("projectName", saved.getProject().getTitle())
             );
         }
