@@ -155,7 +155,7 @@ public class ProjectClosingOrchestrator {
 
                 boolean  success = paymentOrchestrator.processOrderPayment(order.getId());
 
-                if(success){
+                /*if(success){
                     log.info("[PROJECT-PAYMENT-SUCCESS] 결제 성공 | OrderID: {}. 후속 작업(티켓/알림) 진행", order.getId());
 
                     for (OrderItemENT item : order.getOrderItems()) {
@@ -180,7 +180,8 @@ public class ProjectClosingOrchestrator {
 
                         log.info("[PROJECT-TICKET-ISSUE] 티켓 발행 및 QR 알림 발송 | OrderItemID: {}", item.getId());
 
-                        ticketIssueSRV.issueIfAbsent(item);
+
+                        //ticketIssueSRV.issueIfAbsent(item);
 
                         // 2번 템플릿(QR 발급) - 주문자에게 적재
                         alarmSRVI.send(
@@ -190,7 +191,7 @@ public class ProjectClosingOrchestrator {
                         );
 
                     }
-                }
+                }*/
 
 
 

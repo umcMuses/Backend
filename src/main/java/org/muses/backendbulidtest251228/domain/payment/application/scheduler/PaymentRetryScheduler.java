@@ -73,7 +73,7 @@ public class PaymentRetryScheduler {
                 }
 
                 // 티켓 생성
-                if(success){
+                /*if(success){
                     for (OrderItemENT item : order.getOrderItems()) {
                         Long rewardId = item.getRewardId();
 
@@ -95,7 +95,7 @@ public class PaymentRetryScheduler {
                             continue;
                         }
 
-                        ticketIssueSRV.issueIfAbsent(item);
+                        //ticketIssueSRV.issueIfAbsent(item);
 
                         // 2번 템플릿(QR 발급) - 주문자에게 적재
                         alarmSRVI.send(
@@ -104,7 +104,7 @@ public class PaymentRetryScheduler {
                                 Map.of("projectName", order.getProject().getTitle())
                         );
                     }
-                }
+                }*/
 
                 ProjectENT project = order.getProject();
 
