@@ -122,4 +122,14 @@ public class CreatorCenterProjectCTL {
     }
 
 
+    @Operation(summary = "정산", description = "프로젝트 정산 통계")
+    @GetMapping("/creator-center/projects/{projectId}/settlement")
+    public ApiResponse<org.muses.backendbulidtest251228.domain.mypage.dto.CreatorSettlementResDT> getSettlement(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long projectId
+    ) {
+        return ApiResponse.success(creatorCenterAnalyticsSRV.getSettlement(userDetails, projectId));
+    }
+
+
 }

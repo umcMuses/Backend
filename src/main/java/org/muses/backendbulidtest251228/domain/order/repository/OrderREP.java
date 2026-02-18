@@ -31,6 +31,15 @@ public interface OrderREP extends JpaRepository<OrderENT, Long> {
             @Param("status") OrderStatus status
     );
 
+    @Query("""
+    SELECT COALESCE(SUM(o.totalAmount), 0)
+    FROM OrderENT o
+    WHERE o.project.id = :projectId
+      AND o.status NOT IN ('CANCELED', 'PAY_FAILED')
+""")
+    BigDecimal sumAmountByProjectExcludeCanceledAndPayFailed(@Param("projectId") Long projectId);
+
+
 
 
 
