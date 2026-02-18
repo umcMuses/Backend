@@ -3,6 +3,7 @@ package org.muses.backendbulidtest251228.domain.mypage.service;
 import lombok.RequiredArgsConstructor;
 import org.muses.backendbulidtest251228.domain.member.entity.Member;
 import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorDashboardResDT;
+import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorSettlementResDT;
 import org.muses.backendbulidtest251228.domain.mypage.dto.CreatorSummaryResDT;
 import org.muses.backendbulidtest251228.domain.mypage.repository.MyPageMemberREP;
 import org.muses.backendbulidtest251228.domain.order.repository.OrderREP;
@@ -117,6 +118,40 @@ public class CreatorCenterAnalyticsSRVI implements CreatorCenterAnalyticsSRV {
                 .rewardSales(rewardSales)
                 .genderRatio(genderRatio)
                 .ageRatio(ageRatio)
+                .build();
+    }
+
+
+    @Override
+    public CreatorSettlementResDT getSettlement(UserDetails userDetails, Long projectId) {
+
+
+        Member me = getMe(userDetails);
+
+        ProjectENT project = projectRepo.findById(projectId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND));
+
+        if (!Objects.equals(project.getMember().getId(), me.getId())) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+
+
+        BigDecimal total = orderREP.sumAmountByProjectExcludeCanceledAndPayFailed(projectId);
+        if (total == null) total = BigDecimal.ZERO;
+
+        // 수수료 7%
+        BigDecimal feeRate = new BigDecimal("0.07");
+        BigDecimal fee = total.multiply(feeRate);
+
+        // 돈 단위scale 2로 맞춤
+        fee = fee.setScale(2, java.math.RoundingMode.HALF_UP);
+
+        BigDecimal payout = total.subtract(fee).setScale(2, java.math.RoundingMode.HALF_UP);
+
+        return CreatorSettlementResDT.builder()
+                .totalAmount(total.setScale(2, java.math.RoundingMode.HALF_UP))
+                .feeAmount(fee)
+                .payoutAmount(payout)
                 .build();
     }
 
