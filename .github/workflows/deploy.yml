@@ -100,19 +100,20 @@ jobs:
             
             # 실행
             echo "🚀 서버를 실행합니다..."
-            nohup java -jar /home/ubuntu/muses/*.jar \
+            nohup env \
+              RDS_USERNAME="$1" \
+              RDS_PASSWORD="$2" \
+              JWT_SECRET="$3" \
+              GOOGLE_CLIENT_ID="$4" \
+              GOOGLE_CLIENT_SECRET="$5" \
+              KAKAO_CLIENT_ID="$6" \
+              KAKAO_CLIENT_SECRET="$7" \
+              TOSS_SECRET_KEY="$8" \
+              AWS_ACCESS_KEY="$9" \
+              AWS_SECRET_KEY="${10}" \
+              S3_BUCKET_NAME="${11}" \
+              java -jar /home/ubuntu/muses/*.jar \
               --spring.profiles.active=prod \
-              --RDS_USERNAME="$1" \
-              --RDS_PASSWORD="$2" \
-              --JWT_SECRET="$3" \
-              --GOOGLE_CLIENT_ID="$4" \
-              --GOOGLE_CLIENT_SECRET="$5" \
-              --KAKAO_CLIENT_ID="$6" \
-              --KAKAO_CLIENT_SECRET="$7" \
-              --TOSS_SECRET_KEY="$8" \
-              --AWS_ACCESS_KEY="$9" \
-              --AWS_SECRET_KEY="$10" \
-              --S3_BUCKET_NAME="$11" \
               > /home/ubuntu/muses/app.log 2>&1 &
             
             echo $! > app.pid
@@ -122,7 +123,12 @@ jobs:
             chmod +x /home/ubuntu/muses/deploy.sh
             
             # 스크립트를 백그라운드로 실행하고 즉시 종료
-            nohup /home/ubuntu/muses/deploy.sh "$RDS_USERNAME" "$RDS_PASSWORD" "$JWT_SECRET" "$GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_SECRET" "$KAKAO_CLIENT_ID" "$KAKAO_CLIENT_SECRET" "$TOSS_SECRET_KEY" > /home/ubuntu/muses/deploy.log 2>&1 &
+            nohup /home/ubuntu/muses/deploy.sh \
+              "$RDS_USERNAME" "$RDS_PASSWORD" "$JWT_SECRET" \
+              "$GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_SECRET" \
+              "$KAKAO_CLIENT_ID" "$KAKAO_CLIENT_SECRET" \
+              "$TOSS_SECRET_KEY" "$AWS_ACCESS_KEY" "$AWS_SECRET_KEY" "$S3_BUCKET_NAME" \
+              > /home/ubuntu/muses/deploy.log 2>&1 &
             
             sleep 3
             echo "📋 배포 스크립트 실행 완료"
