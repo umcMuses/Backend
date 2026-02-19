@@ -50,6 +50,9 @@ public class SecurityConfig {
 				.requestMatchers("/login/**", "/auth/callback", "/api/auth/**", "/oauth2/**", "/api/projects/**", "/api/alarms/**", "/api/events/**", "/health", "/error").permitAll()
                     .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/creators/applications/me").authenticated()
                     .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/creators/applications").authenticated()
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/creators/applications/me/docs").authenticated()
+                    .requestMatchers(org.springframework.http.HttpMethod.GET,  "/api/creators/applications/me/docs").authenticated()
+                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/creators/applications/me/submit").authenticated()
 				.requestMatchers("/api/creators/**").hasRole("CREATOR")
 				.requestMatchers("/api/admin/**").hasRole("ADMIN")
 				// TODO 정적 파일 (업로드된 이미지) 허용
