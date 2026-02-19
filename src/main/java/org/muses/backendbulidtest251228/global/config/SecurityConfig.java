@@ -9,6 +9,7 @@ import org.muses.backendbulidtest251228.global.security.HttpCookieOAuth2AuthorRe
 import org.muses.backendbulidtest251228.global.security.handler.OAuth2LoginSuccessHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -42,21 +43,31 @@ public class SecurityConfig {
 			// JWT 사용 -> 세션 사용 X
 			.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.authorizeHttpRequests(auth -> auth
-				// Swagger 허용
-				.requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**","/api/landing").permitAll()
-				// QR 화면 허용
+				// ==== 인프라/정적 리소스 ====
+				.requestMatchers(
+					"/swagger-ui/**", "/swagger-ui.html",
+					"/api-docs/**", "/v3/api-docs/**",
+					"/health", "/error",
+					"/files/**"
+				).permitAll()
+				// ==== 인증 API ====
+				.requestMatchers(
+					"/api/auth/signup",
+					"/api/auth/login",
+					"/api/auth/signup/check-email",
+					"/login/**",
+					"/oauth2/**",
+					"/auth/callback"
+				).permitAll()
+				// ==== 공개 API ====
+				.requestMatchers(HttpMethod.POST, "/api/landing").permitAll()
+				.requestMatchers(HttpMethod.GET, "/api/projects/**").permitAll()
+				.requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
+				.requestMatchers(HttpMethod.GET, "/api/alarms/**").permitAll()
+				// ==== QR 체크인 결과 ====
 				.requestMatchers("/api/checkin/result", "/checkin/result").permitAll()
-				.requestMatchers("/api/auth/profile/**", "/api/users/me/**").authenticated()
-				.requestMatchers("/login/**", "/auth/callback", "/api/auth/**", "/oauth2/**", "/api/projects/**", "/api/alarms/**", "/api/events/**", "/health", "/error").permitAll()
-                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/creators/applications/me").authenticated()
-                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/creators/applications").authenticated()
-                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/creators/applications/me/docs").authenticated()
-                    .requestMatchers(org.springframework.http.HttpMethod.GET,  "/api/creators/applications/me/docs").authenticated()
-                    .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/creators/applications/me/submit").authenticated()
-				.requestMatchers("/api/creators/**").hasRole("CREATOR")
+				// ==== 관리자 전용 ====
 				.requestMatchers("/api/admin/**").hasRole("ADMIN")
-				// TODO 정적 파일 (업로드된 이미지) 허용
-				.requestMatchers("/files/**").permitAll()
 				.anyRequest().authenticated()
 			)
 			// JWT 필터 등록
